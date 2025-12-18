@@ -1,0 +1,43 @@
+.CinemasGlobalFilter {
+    position: relative;
+}
+
+.autocomplete-dropdown {
+    background-color: #1a1a1a !important;
+    border: 1px solid #333 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+    margin-top: 0.25rem !important;
+    overflow: hidden;
+}
+
+.autocomplete-item {
+    cursor: pointer !important;
+    border: none !important;
+    border-bottom: 1px solid #333 !important;
+    padding: 0.75rem 1rem !important;
+    transition: background-color 0.2s ease;
+    color: #ffffff !important;
+    background-color: #1a1a1a !important;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item:focus {
+    background-color: #2a2a2a !important;
+    color: var(--color-accent) !important;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none !important;
+}
+
+.autocomplete-item a {
+    color: #ffffff !important;
+    text-decoration: none;
+}
+
+.autocomplete-item:hover a,
+.autocomplete-item:focus a {
+    color: var(--color-accent) !important;
+}
+

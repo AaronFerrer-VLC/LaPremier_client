@@ -1,0 +1,34 @@
+.CinemasPage {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding-top: 20px;
+    padding-bottom: 50px;
+}
+
+.CinemasPage h3,
+.CinemasPage .section-title {
+    color: var(--text-primary) !important;
+    font-family: var(--font-display);
+}
+
+.CinemasPage hr,
+.CinemasPage .border-secondary {
+    border-color: var(--border-color-medium) !important;
+    margin: 1.5rem 0;
+}
+
+.CinemasPage p,
+.CinemasPage span,
+.CinemasPage div {
+    color: var(--text-primary);
+}
+
+.CinemasPage a {
+    color: var(--text-primary) !important;
+}
+
+.CinemasPage a:hover {
+    color: var(--text-accent) !important;
+}
+

@@ -1,0 +1,81 @@
+/* Global Styles - LA PREMIERE */
+/* Asegurar que body y html usen las variables CSS */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+body {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Forzar que todos los elementos usen las variables */
+body * {
+    color: inherit;
+}
+
+/* Asegurar visibilidad en ambos modos */
+[data-theme="dark"] {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+[data-theme="light"] {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* Links globales */
+a {
+    color: var(--text-primary) !important;
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--text-accent) !important;
+}
+
+/* Inputs globales */
+input,
+textarea,
+select {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color-light) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: var(--text-secondary) !important;
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-secondary);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-accent);
+}
+

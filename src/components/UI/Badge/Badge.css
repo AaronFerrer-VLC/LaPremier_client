@@ -1,0 +1,31 @@
+.design-system-badge {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-weight: var(--font-weight-normal);
+    font-size: var(--font-size-sm);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.design-system-badge.badge-light {
+    background-color: var(--color-secondary);
+    color: var(--text-primary);
+}
+
+.design-system-badge.badge-medium {
+    background-color: var(--color-secondary-dark);
+    color: var(--text-primary);
+}
+
+.design-system-badge.badge-dark {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.design-system-badge.badge-accent {
+    background-color: var(--color-accent);
+    color: var(--color-black);
+    font-weight: var(--font-weight-semibold);
+}
+

@@ -1,0 +1,12 @@
+.RecommendedMovies {
+  margin-top: 2rem;
+}
+
+.recommended-movies-title {
+  font-family: var(--font-display);
+  font-size: calc(1.5rem + 0.5vw);
+  font-weight: bold;
+  color: var(--text-primary) !important;
+  margin-bottom: 1.5rem;
+}
+

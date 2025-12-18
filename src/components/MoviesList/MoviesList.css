@@ -1,0 +1,27 @@
+.MoviesList {
+    min-height: 60vh;
+}
+
+.movies-list-header {
+    border-bottom: 1px solid var(--border-color-light);
+}
+
+.movies-list-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.movies-list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .movies-list-title {
+        font-size: 1.5rem;
+    }
+}
+

@@ -1,42 +1,89 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { Form, ListGroup } from "react-bootstrap"
-
-import axios from "axios"
 import { Link } from "react-router-dom"
-
-const API_URL = import.meta.env.VITE_APP_API_URL
-
+import { moviesService } from "../../services/movies.service"
+import { logError } from "../../utils/errorHandler"
+import { debounce } from "../../utils/debounce"
+import { ENV } from "../../config/env"
+import logger from "../../utils/logger"
+import "./MoviesGlobalFilter.css"
 
 const MoviesGlobalFilter = ({ filterSelected, handleFilterSelected }) => {
-
-
-    const [filterValue, setFilterValue] = useState()
+    const [filterValue, setFilterValue] = useState('')
     const [filterResults, setFilterResults] = useState([])
-    const [showFilterResults, setShowFilterResults] = useState()
+    const [showFilterResults, setShowFilterResults] = useState(false)
 
-    const handleFilterChange = e => {
-        handleShowFilterResults(true)
-        const { value } = e.target
-        setFilterValue(value)
-    }
+    const searchMovies = useCallback(async (query) => {
+        if (!query || query.trim().length < 2) {
+            setFilterResults([])
+            return
+        }
+
+        try {
+            // Use TMDB search if available, otherwise fallback to local
+            if (ENV.HAS_TMDB) {
+                const searchResults = await moviesService.searchTMDB(query)
+                const transformedResults = (searchResults.results || []).slice(0, 5).map(movie => ({
+                    id: movie.id,
+                    tmdbId: movie.id,
+                    title: {
+                        spanish: movie.title,
+                        original: movie.original_title
+                    },
+                }))
+                setFilterResults(transformedResults)
+            } else {
+                const response = await moviesService.searchByTitle(query)
+                setFilterResults(response.data.filter(movie => !movie.isDeleted))
+            }
+        } catch (err) {
+            logError(err, 'MoviesGlobalFilter')
+            logger.error('Movie search failed in MoviesGlobalFilter', err, 'MoviesGlobalFilter')
+            setFilterResults([])
+        }
+    }, [])
+
+    const debouncedSearch = useCallback(
+        debounce((query) => searchMovies(query), 300),
+        [searchMovies]
+    )
 
     useEffect(() => {
-        axios
-            .get(`${API_URL}/movies/?title.spanish_like=${filterValue}`)
-            .then(response => {
-                setFilterResults(response.data)
-            })
-            .catch(err => console.log(err))
+        if (filterValue && filterValue.trim().length >= 2) {
+            debouncedSearch(filterValue)
+            setShowFilterResults(true)
+        } else {
+            setFilterResults([])
+            setShowFilterResults(false)
+        }
+    }, [filterValue, debouncedSearch])
 
-    }, [filterValue])
 
-
-    const handleShowFilterResults = change => {
-        setShowFilterResults(change)
+    const handleFilterChange = (e) => {
+        const { value } = e.target
+        setFilterValue(value)
+        setShowFilterResults(true)
     }
 
-    const changeFilterSelected = input => {
-        handleFilterSelected(input)
+    const handleFocus = () => {
+        handleFilterSelected("pelis")
+        // Si hay texto, mostrar resultados
+        if (filterValue && filterValue.trim().length >= 2) {
+            setShowFilterResults(true)
+        }
+    }
+
+    const handleBlur = () => {
+        // Delay para permitir clicks en los items
+        setTimeout(() => {
+            setShowFilterResults(false)
+            handleFilterSelected("")
+        }, 200)
+    }
+
+    const handleItemClick = (movie) => {
+        setFilterValue(movie.title?.spanish || movie.title || '')
+        setShowFilterResults(false)
     }
 
     if (filterSelected === 'cines') {
@@ -47,45 +94,55 @@ const MoviesGlobalFilter = ({ filterSelected, handleFilterSelected }) => {
                 placeholder="Buscar película"
             />
         )
-    } else {
-
-
-        return (
-            <div className="CinemasGlobalFilter">
-                <Form.Control
-                    type="text"
-                    placeholder="Buscar película"
-                    className="mr-sm-2"
-                    onChange={handleFilterChange}
-                    onFocus={() => { setFilterResults([]); setFilterValue(''); handleShowFilterResults(false); changeFilterSelected("pelis") }}
-                    onBlur={() => { setTimeout(() => handleShowFilterResults(false), 100); changeFilterSelected("") }}
-                    value={filterValue}
-                />
-
-                <ListGroup className="position-absolute z-1">
-
-                    {
-                        filterResults.map(elm => {
-
-                            if (showFilterResults) {
-                                return (
-                                    <ListGroup.Item
-                                        key={elm.id}
-                                        as={Link}
-                                        to={`/peliculas/detalles/${elm.id}`}
-                                        onClick={() => setFilterValue(elm.title.spanish)}
-                                    >
-                                        {elm.title.spanish}
-                                    </ListGroup.Item>
-                                )
-                            }
-                        })
-                    }
-
-                </ListGroup>
-            </div >
-        )
     }
+
+    return (
+        <div className="MoviesGlobalFilter position-relative">
+            <Form.Control
+                type="text"
+                placeholder="Buscar película"
+                className="mr-sm-2"
+                onChange={handleFilterChange}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                value={filterValue}
+            />
+
+            {showFilterResults && filterResults.length > 0 && (
+                <ListGroup 
+                    className="position-absolute w-100 mt-1 autocomplete-dropdown" 
+                    style={{ 
+                        zIndex: 1000, 
+                        maxHeight: '300px', 
+                        overflowY: 'auto'
+                    }}
+                >
+                    {filterResults.map(movie => {
+                        const movieId = movie.tmdbId || movie.id;
+                        const uniqueKey = movieId || `movie-${movie.title?.spanish || movie.title || 'unknown'}`;
+                        return (
+                            <ListGroup.Item
+                                key={uniqueKey}
+                                as={Link}
+                                to={`/peliculas/detalles/${movieId}`}
+                                onClick={() => handleItemClick(movie)}
+                                action
+                                className="autocomplete-item"
+                                style={{
+                                    cursor: 'pointer',
+                                    border: 'none',
+                                    borderBottom: '1px solid var(--border-color-light)',
+                                    padding: '0.75rem 1rem'
+                                }}
+                            >
+                                {movie.title?.spanish || movie.title || 'Sin título'}
+                            </ListGroup.Item>
+                        );
+                    })}
+                </ListGroup>
+            )}
+        </div>
+    )
 
 }
 

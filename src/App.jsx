@@ -1,14 +1,17 @@
 import 'bootstrap/dist/css/bootstrap.min.css'
+import 'react-toastify/dist/ReactToastify.css'
 import "./App.css"
 import AppRoutes from './routes/AppRoutes'
 import Navigation from './components/Navigation/Navigation'
 import Footer from './components/Footer/Footer'
+import ScrollToTop from './components/ScrollToTop/ScrollToTop'
 import { useLocation } from 'react-router-dom'
+import { ToastContainer } from 'react-toastify'
 
-import { Modal, Button, Form } from 'react-bootstrap'
-import { useState, useContext } from 'react'
+import { useState } from 'react'
 
 import LoginForm from './components/LoginForm/LoginForm'
+import { Modal } from './components/UI'
 
 const App = () => {
 
@@ -30,7 +33,8 @@ const App = () => {
 
 
     <div className='App'>
-
+      <ScrollToTop />
+      
       <Navigation currentFamilyPath={currentFamilyPath} setShowModal={setShowModal} />
 
       <AppRoutes currentFamilyPath={currentFamilyPath} />
@@ -40,16 +44,23 @@ const App = () => {
       <Modal
         show={showModal}
         onHide={() => setShowModal(false)}
-        backdrop="static"
-        keyboard={false}
+        title="Iniciar sesión"
       >
-        <Modal.Header closeButton>
-          <Modal.Title>Iniciar sesión</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <LoginForm setShowModal={setShowModal} />
-        </Modal.Body>
-      </Modal >
+        <LoginForm setShowModal={setShowModal} />
+      </Modal>
+
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
 
     </div>
 

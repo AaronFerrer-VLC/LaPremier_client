@@ -1,0 +1,531 @@
+/**
+ * Design System - LA PREMIERE
+ * Sistema de diseño común para toda la aplicación
+ */
+
+:root {
+    /* ============================================
+       COLORES PRIMARIOS
+       ============================================ */
+    --color-primary: #000000;
+    --color-primary-light: #1a1a1a;
+    --color-primary-dark: #000000;
+    
+    --color-secondary: #808080;
+    --color-secondary-light: #a0a0a0;
+    --color-secondary-dark: #353535;
+    
+    --color-accent: #ffb400;
+    --color-accent-light: #ffc733;
+    --color-accent-dark: #cc9000;
+    
+    /* ============================================
+       COLORES NEUTROS
+       ============================================ */
+    --color-white: #ffffff;
+    --color-black: #000000;
+    --color-grey-100: #f5f5f5;
+    --color-grey-200: #e4e5e9;
+    --color-grey-300: #dee2e6;
+    --color-grey-400: #a0a0a0;
+    --color-grey-500: #808080;
+    --color-grey-600: #353535;
+    --color-grey-700: #1a1a1a;
+    --color-grey-800: #0d0d0d;
+    --color-grey-900: #000000;
+    
+    /* ============================================
+       COLORES SEMÁNTICOS
+       ============================================ */
+    --color-success: #28a745;
+    --color-success-light: #34ce57;
+    --color-success-dark: #1e7e34;
+    
+    --color-danger: #dc3545;
+    --color-danger-light: #e4606d;
+    --color-danger-dark: #c82333;
+    
+    --color-warning: #ffc107;
+    --color-warning-light: #ffcd39;
+    --color-warning-dark: #e0a800;
+    
+    --color-info: #17a2b8;
+    --color-info-light: #3fc1d8;
+    --color-info-dark: #138496;
+    
+    /* ============================================
+       COLORES DE FONDO (DARK MODE - Default)
+       ============================================ */
+    --bg-primary: var(--color-black);
+    --bg-secondary: var(--color-grey-700);
+    --bg-tertiary: var(--color-grey-600);
+    --bg-light: var(--color-white);
+    --bg-dark: var(--color-black);
+    --bg-overlay: rgba(0, 0, 0, 0.5);
+    --bg-overlay-light: rgba(255, 255, 255, 0.1);
+    --bg-overlay-medium: rgba(255, 255, 255, 0.2);
+    --bg-overlay-dark: rgba(0, 0, 0, 0.8);
+    
+    /* ============================================
+       COLORES DE TEXTO (DARK MODE - Default)
+       ============================================ */
+    --text-primary: var(--color-white);
+    --text-secondary: var(--color-grey-400);
+    --text-muted: rgba(255, 255, 255, 0.7);
+    --text-dark: var(--color-black);
+    --text-light: var(--color-white);
+    --text-accent: var(--color-accent);
+    
+    /* ============================================
+       TIPOGRAFÍA
+       ============================================ */
+    --font-display: "AmericanCaptain", sans-serif;
+    --font-body: "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "Courier New", Courier, monospace;
+    
+    /* Tamaños de fuente */
+    --font-size-xs: 0.75rem;      /* 12px */
+    --font-size-sm: 0.875rem;    /* 14px */
+    --font-size-base: 1rem;      /* 16px */
+    --font-size-lg: 1.125rem;    /* 18px */
+    --font-size-xl: 1.25rem;     /* 20px */
+    --font-size-2xl: 1.5rem;     /* 24px */
+    --font-size-3xl: 2rem;       /* 32px */
+    --font-size-4xl: 2.5rem;     /* 40px */
+    --font-size-5xl: 3rem;       /* 48px */
+    --font-size-6xl: 4rem;       /* 64px */
+    
+    /* Pesos de fuente */
+    --font-weight-light: 300;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    
+    /* Alturas de línea */
+    --line-height-tight: 1.25;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.75;
+    
+    /* ============================================
+       ESPACIADO
+       ============================================ */
+    --spacing-xs: 0.25rem;    /* 4px */
+    --spacing-sm: 0.5rem;     /* 8px */
+    --spacing-md: 1rem;       /* 16px */
+    --spacing-lg: 1.5rem;     /* 24px */
+    --spacing-xl: 2rem;       /* 32px */
+    --spacing-2xl: 3rem;      /* 48px */
+    --spacing-3xl: 4rem;      /* 64px */
+    --spacing-4xl: 5rem;      /* 80px */
+    --spacing-5xl: 6rem;      /* 96px */
+    
+    /* ============================================
+       BORDES
+       ============================================ */
+    --border-width-thin: 1px;
+    --border-width-medium: 2px;
+    --border-width-thick: 3px;
+    
+    --border-radius-sm: 0.25rem;   /* 4px */
+    --border-radius-md: 0.5rem;    /* 8px */
+    --border-radius-lg: 0.75rem;   /* 12px */
+    --border-radius-xl: 1rem;      /* 16px */
+    --border-radius-2xl: 1.5rem;   /* 24px */
+    --border-radius-full: 9999px;
+    
+    /* Bordes (DARK MODE - Default) */
+    --border-color-light: rgba(255, 255, 255, 0.1);
+    --border-color-medium: rgba(255, 255, 255, 0.3);
+    --border-color-dark: rgba(255, 255, 255, 0.5);
+    
+    /* ============================================
+       SOMBRAS
+       ============================================ */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.2);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.3);
+    --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.4);
+    --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-glow: 0 0 10px rgba(255, 180, 0, 0.3);
+    --shadow-glow-strong: 0 0 20px rgba(255, 180, 0, 0.5);
+    
+    /* ============================================
+       TRANSICIONES
+       ============================================ */
+    --transition-fast: 150ms ease;
+    --transition-base: 300ms ease;
+    --transition-slow: 500ms ease;
+    --transition-slower: 750ms ease;
+    
+    /* ============================================
+       Z-INDEX
+       ============================================ */
+    --z-index-dropdown: 1000;
+    --z-index-sticky: 1020;
+    --z-index-fixed: 1030;
+    --z-index-modal-backdrop: 1040;
+    --z-index-modal: 1050;
+    --z-index-popover: 1060;
+    --z-index-tooltip: 1070;
+    
+    /* ============================================
+       EFECTOS
+       ============================================ */
+    --blur-sm: blur(4px);
+    --blur-md: blur(8px);
+    --blur-lg: blur(16px);
+    
+    --backdrop-blur: blur(10px);
+}
+
+/* ============================================
+   CLASES UTILITARIAS
+   ============================================ */
+
+/* Colores de texto */
+.text-primary { color: var(--text-primary) !important; }
+.text-secondary { color: var(--text-secondary) !important; }
+.text-muted { color: var(--text-muted) !important; }
+.text-accent { color: var(--text-accent) !important; }
+.text-dark { color: var(--text-dark) !important; }
+.text-light { color: var(--text-light) !important; }
+
+/* Colores de fondo */
+.bg-primary { background-color: var(--bg-primary) !important; }
+.bg-secondary { background-color: var(--bg-secondary) !important; }
+.bg-tertiary { background-color: var(--bg-tertiary) !important; }
+.bg-overlay { background-color: var(--bg-overlay) !important; }
+.bg-overlay-light { background-color: var(--bg-overlay-light) !important; }
+
+/* Bordes */
+.border-light { border-color: var(--border-color-light) !important; }
+.border-medium { border-color: var(--border-color-medium) !important; }
+.border-accent { border-color: var(--color-accent) !important; }
+
+/* Sombras */
+.shadow-glow { box-shadow: var(--shadow-glow) !important; }
+.shadow-glow-strong { box-shadow: var(--shadow-glow-strong) !important; }
+
+/* Transiciones */
+.transition-fast { transition: var(--transition-fast) !important; }
+.transition-base { transition: var(--transition-base) !important; }
+.transition-slow { transition: var(--transition-slow) !important; }
+
+/* Backdrop blur */
+.backdrop-blur {
+    backdrop-filter: var(--backdrop-blur);
+    -webkit-backdrop-filter: var(--backdrop-blur);
+}
+
+/* ============================================
+   COMPONENTES BASE
+   ============================================ */
+
+/* Botones del sistema de diseño */
+.btn-primary {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border: none;
+    padding: var(--spacing-md) var(--spacing-xl);
+    font-weight: var(--font-weight-semibold);
+    border-radius: var(--border-radius-md);
+    transition: var(--transition-base);
+}
+
+.btn-primary:hover {
+    background-color: var(--color-secondary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+    background-color: var(--color-secondary);
+    color: var(--color-white);
+    border: none;
+    padding: var(--spacing-md) var(--spacing-xl);
+    font-weight: var(--font-weight-semibold);
+    border-radius: var(--border-radius-md);
+    transition: var(--transition-base);
+}
+
+.btn-secondary:hover {
+    background-color: var(--color-secondary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-outline {
+    background-color: transparent;
+    color: var(--color-white);
+    border: var(--border-width-medium) solid var(--color-white);
+    padding: var(--spacing-md) var(--spacing-xl);
+    font-weight: var(--font-weight-semibold);
+    border-radius: var(--border-radius-md);
+    transition: var(--transition-base);
+}
+
+.btn-outline:hover {
+    background-color: var(--bg-overlay-light);
+    border-color: rgba(255, 255, 255, 0.8);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Badges del sistema de diseño */
+.badge-light {
+    background-color: var(--color-secondary);
+    color: var(--color-white);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-weight: var(--font-weight-normal);
+    font-size: var(--font-size-sm);
+}
+
+.badge-medium {
+    background-color: var(--color-secondary-dark);
+    color: var(--color-white);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-weight: var(--font-weight-normal);
+    font-size: var(--font-size-sm);
+}
+
+.badge-dark {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-weight: var(--font-weight-normal);
+    font-size: var(--font-size-sm);
+}
+
+.badge-accent {
+    background-color: var(--color-accent);
+    color: var(--color-black);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-sm);
+}
+
+/* Cards del sistema de diseño */
+.card-base {
+    background-color: var(--bg-primary);
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+    transition: var(--transition-base);
+}
+
+.card-base:hover {
+    border-color: var(--border-color-medium);
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-5px);
+}
+
+.card-elevated {
+    background-color: var(--bg-secondary);
+    border: none;
+    border-radius: var(--border-radius-xl);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-md);
+    transition: var(--transition-base);
+}
+
+.card-elevated:hover {
+    box-shadow: var(--shadow-xl);
+    transform: translateY(-5px);
+}
+
+/* Inputs del sistema de diseño */
+.input-base {
+    background-color: var(--bg-primary);
+    border: var(--border-width-thin) solid var(--border-color-light);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    transition: var(--transition-base);
+}
+
+.input-base:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(255, 180, 0, 0.1);
+}
+
+.input-base::placeholder {
+    color: var(--text-muted);
+}
+
+/* ============================================
+   RESPONSIVE TYPOGRAPHY
+   ============================================ */
+h1, .h1 {
+    font-family: var(--font-display);
+    font-size: clamp(var(--font-size-4xl), 5vw, var(--font-size-6xl));
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-tight);
+    color: var(--text-primary);
+}
+
+h2, .h2 {
+    font-family: var(--font-display);
+    font-size: clamp(var(--font-size-3xl), 4vw, var(--font-size-5xl));
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-tight);
+    color: var(--text-primary);
+}
+
+h3, .h3 {
+    font-family: var(--font-display);
+    font-size: clamp(var(--font-size-2xl), 3vw, var(--font-size-4xl));
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-normal);
+    color: var(--text-primary);
+}
+
+h4, .h4 {
+    font-family: var(--font-display);
+    font-size: clamp(var(--font-size-xl), 2.5vw, var(--font-size-3xl));
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-normal);
+    color: var(--text-primary);
+}
+
+h5, .h5 {
+    font-size: clamp(var(--font-size-lg), 2vw, var(--font-size-2xl));
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-normal);
+}
+
+h6, .h6 {
+    font-size: clamp(var(--font-size-base), 1.5vw, var(--font-size-xl));
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-normal);
+}
+
+p, .p {
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-relaxed);
+    color: var(--text-primary);
+}
+
+/* ============================================
+   UTILIDADES DE ESPACIADO
+   ============================================ */
+.gap-xs { gap: var(--spacing-xs) !important; }
+.gap-sm { gap: var(--spacing-sm) !important; }
+.gap-md { gap: var(--spacing-md) !important; }
+.gap-lg { gap: var(--spacing-lg) !important; }
+.gap-xl { gap: var(--spacing-xl) !important; }
+
+/* ============================================
+   ANIMACIONES
+   ============================================ */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn var(--transition-slow) ease-out;
+}
+
+.animate-slide-in {
+    animation: slideIn var(--transition-base) ease-out;
+}
+
+.animate-scale-in {
+    animation: scaleIn var(--transition-base) ease-out;
+}
+
+/* ============================================
+   DARK MODE (Default)
+   ============================================ */
+[data-theme="dark"],
+:root {
+    /* Los valores por defecto son para dark mode */
+}
+
+/* ============================================
+   LIGHT MODE
+   ============================================ */
+[data-theme="light"] {
+    /* ============================================
+       COLORES DE FONDO (LIGHT MODE)
+       ============================================ */
+    --bg-primary: var(--color-white);
+    --bg-secondary: var(--color-grey-200);
+    --bg-tertiary: var(--color-grey-300);
+    --bg-light: var(--color-white);
+    --bg-dark: var(--color-grey-800);
+    --bg-overlay: rgba(255, 255, 255, 0.9);
+    --bg-overlay-light: rgba(0, 0, 0, 0.05);
+    --bg-overlay-medium: rgba(0, 0, 0, 0.1);
+    --bg-overlay-dark: rgba(0, 0, 0, 0.7);
+    
+    /* ============================================
+       COLORES DE TEXTO (LIGHT MODE)
+       ============================================ */
+    --text-primary: var(--color-black);
+    --text-secondary: var(--color-grey-600);
+    --text-muted: rgba(0, 0, 0, 0.6);
+    --text-dark: var(--color-black);
+    --text-light: var(--color-white);
+    
+    /* ============================================
+       BORDES (LIGHT MODE)
+       ============================================ */
+    --border-color-light: rgba(0, 0, 0, 0.1);
+    --border-color-medium: rgba(0, 0, 0, 0.2);
+    --border-color-dark: rgba(0, 0, 0, 0.3);
+    
+    /* ============================================
+       SOMBRAS (LIGHT MODE)
+       ============================================ */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.15);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.2);
+    --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.25);
+}
+
+/* Transición suave entre temas */
+* {
+    transition: background-color var(--transition-base),
+                color var(--transition-base),
+                border-color var(--transition-base);
+}
+

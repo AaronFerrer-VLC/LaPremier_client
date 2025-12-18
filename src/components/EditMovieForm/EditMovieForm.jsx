@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react"
-import { Button, Form, CloseButton, Row, Col } from 'react-bootstrap';
+import { Form, CloseButton, Row, Col } from 'react-bootstrap';
+import { Button } from '../UI';
 import Loader from "../Loader/Loader"
 import { useNavigate, useParams } from "react-router-dom"
 import axios from "axios"
+import logger from '../../utils/logger'
 
 const API_URL = import.meta.env.VITE_APP_API_URL
 
@@ -33,14 +35,15 @@ const EditMovieForm = () => {
         fetchMovieData()
     }, [])
 
-    const fetchCinemas = () => {
-        axios
-            .get(`${API_URL}/cinemas`)
-            .then(response => {
-                setCinemas(response.data)
-                setIsLoading(false)
-            })
-            .catch(err => console.log(err))
+    const fetchCinemas = async () => {
+        try {
+            const response = await axios.get(`${API_URL}/cinemas`)
+            setCinemas(response.data)
+            setIsLoading(false)
+        } catch (err) {
+            logger.error('Failed to fetch cinemas', err, 'EditMovieForm')
+            setIsLoading(false)
+        }
     }
 
     const [title, setTitle] = useState({
@@ -135,8 +138,13 @@ const EditMovieForm = () => {
 
         axios
             .put(`${API_URL}/movies/${movieId}`, reqPayload)
-            .then(response => navigate(`/peliculas/detalles/${response.data.id}`))
-            .catch(err => console.log(err))
+            .then(response => {
+                logger.info('Movie updated successfully', { movieId: response.data.id }, 'EditMovieForm')
+                navigate(`/peliculas/detalles/${response.data.id}`)
+            })
+            .catch(err => {
+                logger.error('Failed to update movie', err, 'EditMovieForm')
+            })
     }
 
     return (
@@ -223,8 +231,8 @@ const EditMovieForm = () => {
                                     })
                                 }
 
-                                <Button className="styled-button-2 me-2" size="sm" variant="dark" onClick={addNewGender}>Añadir Género</Button>
-                                <Button className="styled-button-2 me-2" size="sm" variant="dark" onClick={deletNewGender}>Quitar Género</Button>
+                                <Button variant="secondary" size="sm" className="me-2" onClick={addNewGender}>Añadir Género</Button>
+                                <Button variant="secondary" size="sm" className="me-2" onClick={deletNewGender}>Quitar Género</Button>
 
                             </Form.Group>
 
@@ -284,7 +292,7 @@ const EditMovieForm = () => {
                                         />
                                     </div>
                                 ))}
-                                <Button className="styled-button-2 me-2" size="sm" variant="dark" onClick={addNewCasting}> Añadir Actor</Button>
+                                <Button variant="secondary" size="sm" className="me-2" onClick={addNewCasting}> Añadir Actor</Button>
                             </Form.Group>
 
                             <Form.Group className="mb-3" controlId="trailerField">
@@ -327,8 +335,8 @@ const EditMovieForm = () => {
                                         ))}
                                     </Form.Control>
                                 ))}
-                                <Button disabled className="styled-button-2 me-2" size="sm" variant="dark" onClick={addNewCinema}>Añadir Cine</Button>
-                                <Button disabled className="styled-button-2 me-2" size="sm" variant="dark" onClick={deletNewCinema}>Quitar Cine</Button>
+                                <Button disabled variant="secondary" size="sm" className="me-2" onClick={addNewCinema}>Añadir Cine</Button>
+                                <Button disabled variant="secondary" size="sm" className="me-2" onClick={deletNewCinema}>Quitar Cine</Button>
                             </Form.Group>
 
                             <Form.Group className="mb-3" controlId="releasedField">
@@ -342,7 +350,7 @@ const EditMovieForm = () => {
                             </Form.Group>
 
                             <div className="d-grid mt-5">
-                                <Button className="styled-button-2" variant="dark" type="submit">
+                                <Button variant="primary" size="lg" type="submit">
                                     Editar película
                                 </Button>
                             </div>

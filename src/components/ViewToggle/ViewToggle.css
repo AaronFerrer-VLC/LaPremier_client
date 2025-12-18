@@ -1,0 +1,14 @@
+.ViewToggle {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.ViewToggle .Button {
+  min-width: 40px;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+

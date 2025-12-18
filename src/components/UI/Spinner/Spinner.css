@@ -1,0 +1,51 @@
+.design-system-spinner-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    justify-content: center;
+}
+
+.design-system-spinner {
+    display: inline-block;
+}
+
+.design-system-spinner.spinner-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.15em;
+}
+
+.design-system-spinner.spinner-md {
+    width: 2rem;
+    height: 2rem;
+    border-width: 0.2em;
+}
+
+.design-system-spinner.spinner-lg {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.25em;
+}
+
+.design-system-spinner.spinner-primary {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.design-system-spinner.spinner-accent {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+}
+
+.design-system-spinner.spinner-white {
+    color: var(--color-white);
+    border-color: var(--color-white);
+}
+
+.design-system-spinner-text {
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    margin-left: var(--spacing-sm);
+}
+

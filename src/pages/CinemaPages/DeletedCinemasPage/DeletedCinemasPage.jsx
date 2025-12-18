@@ -1,112 +1,107 @@
 import CinemaCard from "../../../components/CinemaCard/CinemaCard"
-import Loader from "../../../components/Loader/Loader"
-
-import { useState, useEffect, useContext } from "react"
-import { Row, Col, Container, Button } from "react-bootstrap"
-
+import { useContext } from "react"
+import { Row, Col, Container, Alert } from "react-bootstrap"
+import { Button } from "../../../components/UI"
 import { Navigate } from "react-router-dom"
 import { AuthContext } from "../../../contexts/auth.context"
-
-import axios from "axios"
-
-const API_URL = import.meta.env.VITE_APP_API_URL
+import { cinemasService } from "../../../services/cinemas.service"
+import { moviesService } from "../../../services/movies.service"
+import { useApi } from "../../../hooks/useApi"
+import { notifySuccess, notifyError } from "../../../utils/notifications"
+import logger from "../../../utils/logger"
+import { SkeletonCardList } from "../../../components/SkeletonLoader/SkeletonLoader"
 
 const DeletedCinemasPage = () => {
+    const { isAuthenticated } = useContext(AuthContext)
 
-    const { loggedUser } = useContext(AuthContext)
-
-    if (!loggedUser) {
+    if (!isAuthenticated) {
         return <Navigate to="/cines" />
     }
 
-    const [cinemas, setCinemas] = useState([])
-    const [isLoading, setIsLoading] = useState(true)
+    // Fetch cinemas using useApi hook
+    const { data: cinemas, loading: isLoading, refetch } = useApi(
+        () => cinemasService.getAll(),
+        []
+    )
 
-    useEffect(() => {
-        fetchCinemas()
-    }, [])
+    const deletedCinemas = cinemas?.filter(cinema => cinema.isDeleted) || []
 
-    const fetchCinemas = () => {
-        axios
-            .get(`${API_URL}/cinemas`)
-            .then(response => {
-                setCinemas(response.data)
-                setIsLoading(false)
-            })
-            .catch(err => console.log(err))
-    }
+    const handleCinemaRecovery = async (cinema) => {
+        try {
+            // Get all movies
+            const moviesResponse = await moviesService.getAll()
+            const allMovies = moviesResponse.data
 
-    const handleCinemaRecovery = (cinema) => {
-        axios
-            .get((`${API_URL}/movies/`))
-            .then(response => {
+            // Filter movies that reference this cinema
+            const moviesToUpdate = allMovies.filter(eachMovie =>
+                cinema?.movieId?.includes(eachMovie.id)
+            )
 
-                const { data: allMovies } = response
+            // Update each movie to add cinema reference
+            const updatePromises = moviesToUpdate.map(eachMovie => {
+                const newCinemasIds = Array.isArray(eachMovie.cinemaId)
+                    ? [...eachMovie.cinemaId, cinema.id]
+                    : [eachMovie.cinemaId, cinema.id].filter(Boolean)
 
-                const filteredMovies = allMovies.filter(eachMovie => {
-                    return (cinema.movieId.includes(eachMovie.id))
-                })
-
-                filteredMovies.map(eachMovie => {
-
-                    let copyMovieToEdit = {
-                        ...eachMovie
-                    }
-
-                    const newCinemasIds =
-                        Array.isArray(copyMovieToEdit.cinemaId) ?
-                            copyMovieToEdit.cinemaId :
-                            [copyMovieToEdit.cinemaId]
-
-                    newCinemasIds.push(cinema.id)
-
-                    copyMovieToEdit = {
-                        ...eachMovie,
-                        cinemaId: newCinemasIds
-                    }
-
-                    axios
-                        .put(`${API_URL}/movies/${eachMovie.id}`, copyMovieToEdit)
-                        .then(() => { })
-                        .catch(err => console.log(err))
+                return moviesService.update(eachMovie.id, {
+                    ...eachMovie,
+                    cinemaId: newCinemasIds
                 })
             })
-            .catch(err => console.log(err))
 
-        axios
-            .patch((`${API_URL}/cinemas/${cinema.id}`), { isDeleted: false })
-            .then(fetchCinemas())
-            .catch(err => console.log(err))
+            await Promise.all(updatePromises)
+
+            // Restore cinema
+            await cinemasService.restore(cinema.id)
+
+            notifySuccess('Cine recuperado correctamente')
+            logger.info('Cinema restored', { cinemaId: cinema.id }, 'DeletedCinemasPage')
+            refetch() // Refresh list
+        } catch (error) {
+            logger.error('Failed to restore cinema', error, 'DeletedCinemasPage')
+            notifyError('Error al recuperar el cine')
+        }
     }
 
+
+    if (isLoading) {
+        return (
+            <Container className="mt-5">
+                <SkeletonCardList count={6} />
+            </Container>
+        )
+    }
+
+    if (deletedCinemas.length === 0) {
+        return (
+            <Container className="mt-5">
+                <Alert variant="info">
+                    No hay cines eliminados para recuperar.
+                </Alert>
+            </Container>
+        )
+    }
 
     return (
-
-        isLoading ? <Loader /> :
-
-            <Container className="mt-5">
-
-                <div className="DeletedCinemasPage">
-
-                    <Row>
-                        {
-                            cinemas.map(elm => {
-                                if (elm.isDeleted) {
-                                    return (
-                                        <Col className="text-center" md={{ span: 4 }} key={elm.id} >
-                                            <CinemaCard {...elm} />
-                                            <Button className="styled-button-2 mt-3" variant="success" onClick={() => handleCinemaRecovery(elm)}>Recuperar cine</Button>
-                                        </Col>
-                                    )
-                                }
-                            })
-                        }
-                    </Row>
-
-                </div>
-
-            </Container>
-
+        <Container className="mt-5">
+            <div className="DeletedCinemasPage">
+                <Row>
+                    {deletedCinemas.map(cinema => (
+                        <Col className="text-center" md={{ span: 4 }} key={cinema.id}>
+                            <CinemaCard {...cinema} />
+                            <Button
+                                variant="accent"
+                                size="md"
+                                className="mt-3"
+                                onClick={() => handleCinemaRecovery(cinema)}
+                            >
+                                Recuperar cine
+                            </Button>
+                        </Col>
+                    ))}
+                </Row>
+            </div>
+        </Container>
     )
 }
 

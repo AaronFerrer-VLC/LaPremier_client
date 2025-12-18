@@ -1,54 +1,83 @@
-import { Form, Button } from "react-bootstrap"
+import { Form } from "react-bootstrap"
 import { useContext, useState } from "react"
+import { useForm } from "react-hook-form"
+import { yupResolver } from "@hookform/resolvers/yup"
+import { loginSchema } from "../../utils/validationSchemas"
 
 import { AuthContext } from "../../contexts/auth.context"
-
+import authService from "../../services/auth.service"
+import { notifyError, notifySuccess } from "../../utils/notifications"
+import logger from "../../utils/logger"
+import { Button, Input } from "../UI"
 
 const LoginForm = ({ setShowModal }) => {
+    const { login } = useContext(AuthContext)
+    const [isLoading, setIsLoading] = useState(false)
 
-    const { setLoggedUser } = useContext(AuthContext)
-
-    const [loginData, setLoginData] = useState({
-        user: '',
-        password: ''
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting },
+    } = useForm({
+        resolver: yupResolver(loginSchema),
+        mode: 'onBlur', // Validate on blur for better UX
     })
 
-    const handleInputChange = e => {
-        const { value, name } = e.target
-        setLoginData({ ...loginData, [name]: value })
-    }
+    const onSubmit = async (data) => {
+        try {
+            setIsLoading(true)
+            const { user, password } = data
 
-    const handleSubmit = e => {
-        e.preventDefault()
-
-        const { user, password } = loginData
-
-        if (user === "admin" && password === 'admin') {
-            setLoggedUser(true)
+            // Call backend API for authentication
+            const authData = await authService.login(user, password)
+            
+            // Update auth context
+            login(authData.user)
+            
+            notifySuccess('Sesión iniciada correctamente')
             setShowModal(false)
-        } else {
-            alert('Datos de inicio de sesión incorrectos')
+            logger.info('User logged in successfully', { username: user }, 'LoginForm')
+        } catch (error) {
+            logger.error('Login error', error, 'LoginForm')
+            const errorMessage = error.response?.data?.error?.message || 'Error al iniciar sesión'
+            notifyError(errorMessage)
+        } finally {
+            setIsLoading(false)
         }
     }
 
     return (
         <div className="LoginForm">
-            <Form onSubmit={handleSubmit}>
+            <Form onSubmit={handleSubmit(onSubmit)}>
+                <Input
+                    label="Usuario"
+                    type="text"
+                    {...register('user')}
+                    error={!!errors.user}
+                    errorMessage={errors.user?.message}
+                    disabled={isSubmitting}
+                    className="mb-3"
+                />
 
-                <Form.Group className="mb-3" controlId="user">
-                    <Form.Label>Email</Form.Label>
-                    <Form.Control type="text" value={loginData.user} onChange={handleInputChange} name="user" />
-                </Form.Group>
-
-                <Form.Group className="mb-3" controlId="password">
-                    <Form.Label>Contraseña</Form.Label>
-                    <Form.Control type="password" value={loginData.password} onChange={handleInputChange} name="password" />
-                </Form.Group>
+                <Input
+                    label="Contraseña"
+                    type="password"
+                    {...register('password')}
+                    error={!!errors.password}
+                    errorMessage={errors.password?.message}
+                    disabled={isSubmitting}
+                    className="mb-3"
+                />
 
                 <div className="d-grid">
-                    <Button variant="dark" type="submit">Acceder</Button>
+                    <Button 
+                        variant="primary" 
+                        type="submit"
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? 'Iniciando sesión...' : 'Acceder'}
+                    </Button>
                 </div>
-
             </Form>
         </div>
     )

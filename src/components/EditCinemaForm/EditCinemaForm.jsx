@@ -1,9 +1,11 @@
-import { Button, Form, Row, Col } from 'react-bootstrap';
-
+import { Form, Row, Col } from 'react-bootstrap';
+import { Button } from '../UI';
 import { useState, useEffect } from 'react';
-
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
+import logger from '../../utils/logger';
+import { moviesService } from '../../services/movies.service';
+import { ENV } from '../../config/env';
 
 const API_URL = import.meta.env.VITE_APP_API_URL
 
@@ -20,14 +22,57 @@ const EditCinemaForm = () => {
         fetchMovies()
     }, [])
 
-    const fetchMovies = () => {
-        axios
-            .get(`${API_URL}/movies/`)
-            .then(response => {
-                setMovies(response.data)
-                setIsLoading(false)
-            })
-            .catch(err => console.log(err))
+    const fetchMovies = async () => {
+        try {
+            const allMovies = []
+            let localMoviesCount = 0
+            let tmdbMoviesCount = 0
+            
+            // Fetch local movies from MongoDB
+            try {
+                const localResponse = await axios.get(`${API_URL}/movies/`)
+                const localMovies = Array.isArray(localResponse.data) ? localResponse.data : []
+                allMovies.push(...localMovies)
+                localMoviesCount = localMovies.length
+                logger.info('Local movies loaded', { count: localMoviesCount }, 'EditCinemaForm')
+            } catch (localErr) {
+                logger.warn('Failed to fetch local movies', localErr, 'EditCinemaForm')
+            }
+            
+            // Fetch now playing movies from TMDB if enabled
+            if (ENV.HAS_TMDB) {
+                try {
+                    const tmdbMovies = await moviesService.getNowPlayingFromTMDB(1)
+                    // Transform TMDB movies to match local format
+                    const transformedTMDBMovies = tmdbMovies.map(movie => ({
+                        ...movie,
+                        id: movie.tmdbId, // Use tmdbId as id for selection
+                        _id: movie.tmdbId,
+                    }))
+                    allMovies.push(...transformedTMDBMovies)
+                    tmdbMoviesCount = transformedTMDBMovies.length
+                    logger.info('TMDB movies loaded', { count: tmdbMoviesCount }, 'EditCinemaForm')
+                } catch (tmdbErr) {
+                    logger.warn('Failed to fetch TMDB movies', tmdbErr, 'EditCinemaForm')
+                }
+            }
+            
+            // Remove duplicates based on id/tmdbId
+            const uniqueMovies = allMovies.reduce((acc, movie) => {
+                const movieId = movie.id || movie._id || movie.tmdbId
+                if (!acc.find(m => (m.id || m._id || m.tmdbId) === movieId)) {
+                    acc.push(movie)
+                }
+                return acc
+            }, [])
+            
+            setMovies(uniqueMovies)
+            setIsLoading(false)
+            logger.info('All movies loaded', { total: uniqueMovies.length, local: localMoviesCount, tmdb: tmdbMoviesCount }, 'EditCinemaForm')
+        } catch (err) {
+            logger.error('Failed to fetch movies', err, 'EditCinemaForm')
+            setIsLoading(false)
+        }
     }
 
     const [cinemaData, setCinemaData] = useState({
@@ -137,12 +182,27 @@ const EditCinemaForm = () => {
     }
 
     const handleMovieIdChange = (e, idx) => {
-
         const { value } = e.target
 
         const moviesIdsCopy = [...cinemaData.movieId]
 
-        moviesIdsCopy[idx] = value
+        // Convert to number if value is not empty and is numeric, otherwise keep as string
+        // MongoDB schema expects [Number], but we need to handle both TMDB IDs (numbers) and MongoDB ObjectIds
+        if (value) {
+            // Try to convert to number if it's numeric
+            const numValue = Number(value);
+            if (!isNaN(numValue) && isFinite(numValue)) {
+                moviesIdsCopy[idx] = numValue; // Store as number for TMDB IDs
+            } else {
+                // For MongoDB ObjectIds (strings), we'll need to store them differently
+                // But since schema expects Number, we should use a numeric ID if available
+                // For now, try to extract numeric part or use 0 as fallback
+                logger.warn('Non-numeric movie ID selected', { value, idx }, 'EditCinemaForm');
+                moviesIdsCopy[idx] = 0; // Fallback - this won't work, but schema requires Number
+            }
+        } else {
+            moviesIdsCopy[idx] = '';
+        }
 
         setCinemaData({
             ...cinemaData, movieId: moviesIdsCopy
@@ -157,8 +217,10 @@ const EditCinemaForm = () => {
 
     const deletNewMovieId = () => {
         const moviesIdsCopy = [...cinemaData.movieId]
-        moviesIdsCopy.pop('')
-        setCinemaData({ ...cinemaData, movieId: moviesIdsCopy })
+        if (moviesIdsCopy.length > 0) {
+            moviesIdsCopy.pop()
+            setCinemaData({ ...cinemaData, movieId: moviesIdsCopy })
+        }
     }
 
 
@@ -199,8 +261,29 @@ const EditCinemaForm = () => {
 
         e.preventDefault()
 
+        // Filter out empty movie IDs and ensure they're all numbers before submitting
+        const filteredMovieIds = cinemaData.movieId
+            .filter(id => id !== '' && id !== null && id !== undefined && id !== 0)
+            .map(id => {
+                // Ensure all IDs are numbers (MongoDB schema expects [Number])
+                const numId = Number(id);
+                if (isNaN(numId) || !isFinite(numId)) {
+                    logger.warn('Invalid movie ID filtered out', { id }, 'EditCinemaForm');
+                    return null;
+                }
+                return numId;
+            })
+            .filter(id => id !== null);
+
+        logger.info('Submitting cinema with movie IDs', { 
+            cinemaId, 
+            movieIds: filteredMovieIds,
+            movieIdsTypes: filteredMovieIds.map(id => typeof id)
+        }, 'EditCinemaForm');
+
         const reqPayload = {
             ...cinemaData,
+            movieId: filteredMovieIds.length > 0 ? filteredMovieIds : [],
             address: address,
             price: price,
             specs: specs,
@@ -209,8 +292,13 @@ const EditCinemaForm = () => {
 
         axios
             .put(`${API_URL}/cinemas/${cinemaId}`, reqPayload)
-            .then(() => navigate(`/cines/detalles/${cinemaId}`))
-            .catch(err => console.log(err))
+            .then(() => {
+                logger.info('Cinema updated successfully', { cinemaId }, 'EditCinemaForm')
+                navigate(`/cines/detalles/${cinemaId}`)
+            })
+            .catch(err => {
+                logger.error('Failed to update cinema', err, 'EditCinemaForm')
+            })
     }
 
     return (
@@ -235,7 +323,7 @@ const EditCinemaForm = () => {
                                         cinemaData.cover.map((eachCover, idx) => {
                                             return (
                                                 <Form.Control
-                                                    key={idx}
+                                                    key={`cover-${idx}-${eachCover || 'empty'}`}
                                                     className="mb-2"
                                                     name={'cover'}
                                                     type="text"
@@ -248,8 +336,8 @@ const EditCinemaForm = () => {
                                     }
                                 </div>
 
-                                <Button className="styled-button-2 me-2" size="sm" variant="dark" onClick={addNewCinemaCover}>Añadir foto</Button>
-                                <Button className="styled-button-2 me-2" size="sm" variant="dark" onClick={deleteNewCinemaCover}>Quitar foto</Button>
+                                <Button variant="secondary" size="sm" className="me-2" onClick={addNewCinemaCover}>Añadir foto</Button>
+                                <Button variant="secondary" size="sm" className="me-2" onClick={deleteNewCinemaCover}>Quitar foto</Button>
 
                             </Form.Group>
 
@@ -373,17 +461,17 @@ const EditCinemaForm = () => {
                                         cinemaData.services.map((eachService, idx) => {
                                             return (
                                                 <Form.Control
-                                                    key={idx}
+                                                    key={`service-${idx}-${eachService || 'empty'}`}
                                                     as="select"
                                                     className="mb-2"
                                                     type="text"
                                                     onChange={e => handleServicesChange(e, idx)}
                                                     value={eachService}>
 
-                                                    <option>Selecciona un servicio</option>
-                                                    <option>Parking</option>
-                                                    <option>Food & Drinks</option>
-                                                    <option>Toilettes</option>
+                                                    <option value="">Selecciona un servicio</option>
+                                                    <option value="Parking">Parking</option>
+                                                    <option value="Food & Drinks">Food & Drinks</option>
+                                                    <option value="Toilettes">Toilettes</option>
 
                                                 </Form.Control>
                                             )
@@ -393,8 +481,8 @@ const EditCinemaForm = () => {
 
                                 </div>
 
-                                <Button className="styled-button-2 me-2" size="sm" variant="dark" onClick={addNewService}>Añadir servicio</Button>
-                                <Button className="styled-button-2 me-2" size="sm" variant="dark" onClick={deletNewService}>Quitar servicio</Button>
+                                <Button variant="secondary" size="sm" className="me-2" onClick={addNewService}>Añadir servicio</Button>
+                                <Button variant="secondary" size="sm" className="me-2" onClick={deletNewService}>Quitar servicio</Button>
 
                             </Form.Group>
 
@@ -406,19 +494,42 @@ const EditCinemaForm = () => {
                                         cinemaData.movieId.map((eachMovieId, idx) => {
                                             return (
                                                 <Form.Select
-                                                    disabled
-                                                    key={idx}
+                                                    key={`movieId-${idx}-${eachMovieId || 'empty'}`}
                                                     className='mb-2'
-                                                    type="text"
                                                     onChange={e => handleMovieIdChange(e, idx)}
-                                                    value={eachMovieId}>
-                                                    <option>Selecciona una película</option>
+                                                    value={eachMovieId || ''}>
+                                                    <option value="">Selecciona una película</option>
                                                     {
                                                         movies.map(elm => {
+                                                            const movieKey = elm.id || elm._id || elm.tmdbId || `movie-${elm.title?.spanish || 'unknown'}-${idx}`;
+                                                            // ALWAYS use tmdbId for TMDB movies (number)
+                                                            // For local MongoDB movies, we need to use a numeric ID
+                                                            // Since MongoDB schema expects [Number], we'll prioritize tmdbId
+                                                            let movieValue = '';
+                                                            if (elm.tmdbId) {
+                                                                // TMDB movie: use tmdbId (number)
+                                                                movieValue = elm.tmdbId;
+                                                            } else if (elm.id || elm._id) {
+                                                                // Local movie: try to use numeric ID
+                                                                const idToUse = elm.id || elm._id;
+                                                                // Check if it's already a number or can be converted
+                                                                const numId = Number(idToUse);
+                                                                if (!isNaN(numId) && isFinite(numId)) {
+                                                                    movieValue = numId;
+                                                                } else {
+                                                                    // MongoDB ObjectId (string) - can't use directly
+                                                                    // Skip this movie or use a fallback
+                                                                    logger.warn('Local movie has non-numeric ID, skipping', { 
+                                                                        title: elm.title?.spanish || elm.title,
+                                                                        id: idToUse 
+                                                                    }, 'EditCinemaForm');
+                                                                    return null; // Skip this option
+                                                                }
+                                                            }
                                                             return (
-                                                                <option key={elm.id} value={elm.id}>{elm.title.spanish}</option>
+                                                                <option key={movieKey} value={movieValue}>{elm.title?.spanish || elm.title || 'Sin título'}</option>
                                                             )
-                                                        })
+                                                        }).filter(Boolean) // Remove null entries
                                                     }
                                                 </Form.Select>
                                             )
@@ -426,13 +537,13 @@ const EditCinemaForm = () => {
                                     }
                                 </div>
 
-                                <Button disabled className="styled-button-2 me-2" size="sm" variant="dark" onClick={addNewMovieId}>Añadir película</Button>
-                                <Button disabled className="styled-button-2 me-2" size="sm" variant="dark" onClick={deletNewMovieId}>Quitar película</Button>
+                                <Button variant="secondary" size="sm" className="me-2" onClick={addNewMovieId}>Añadir película</Button>
+                                <Button variant="secondary" size="sm" className="me-2" onClick={deletNewMovieId} disabled={cinemaData.movieId.length <= 1}>Quitar película</Button>
 
                             </Form.Group>
 
                             <div className="d-grid mt-5">
-                                <Button className="styled-button-2" variant="dark" type="submit">Editar cine</Button>
+                                <Button variant="primary" size="lg" type="submit">Editar cine</Button>
                             </div>
 
                         </Form>

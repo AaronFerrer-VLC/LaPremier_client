@@ -1,3 +1,187 @@
-.form-section-title {
+.CinemaDetailsPage {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding-top: 20px;
+    padding-bottom: 50px;
+}
+
+.CinemaDetailsPage .form-section-title {
     font-weight: bold;
+    color: var(--text-primary) !important;
+}
+
+/* Forzar que todos los textos en details-container usen text-primary */
+.CinemaDetailsPage .details-container *,
+.CinemaDetailsPage .details-container span,
+.CinemaDetailsPage .details-container p,
+.CinemaDetailsPage .details-container .form-section-title,
+.CinemaDetailsPage .details-container .text-primary {
+    color: var(--text-primary) !important;
+}
+
+.CinemaDetailsPage .details-container {
+    color: var(--text-primary);
+}
+
+.CinemaDetailsPage .details-container span,
+.CinemaDetailsPage .details-container p,
+.CinemaDetailsPage .details-container .text-primary {
+    color: var(--text-primary) !important;
+}
+
+.CinemaDetailsPage hr {
+    border-color: var(--border-color-medium);
+}
+
+.CinemaDetailsPage .border-secondary {
+    border-color: var(--border-color-medium) !important;
+}
+
+.cinema-detail-icon-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 16px;
+    background-color: var(--bg-secondary);
+    border-radius: 12px;
+    border: 2px solid var(--border-color-light);
+    transition: all 0.3s ease;
+    min-width: 70px;
+    min-height: 80px;
+    gap: 8px;
+}
+
+.cinema-detail-icon-container:hover {
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-color-medium);
+    transform: scale(1.05);
+    box-shadow: var(--shadow-md);
+}
+
+.cinema-detail-icon {
+    color: var(--text-accent);
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+    display: block;
+}
+
+.cinema-detail-icon-label {
+    color: var(--text-primary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.CinemaDetailsPage h4,
+.CinemaDetailsPage h5,
+.CinemaDetailsPage .section-title {
+    color: var(--text-primary) !important;
+    font-family: var(--font-display);
+}
+
+.CinemaDetailsPage .bg-secondary {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Forzar que todos los enlaces usen text-primary */
+.CinemaDetailsPage a,
+.CinemaDetailsPage .nav-link,
+.CinemaDetailsPage .navbar-nav .nav-link,
+.CinemaDetailsPage .navbar-nav .nav-link:visited,
+.CinemaDetailsPage .navbar-nav .nav-link:active,
+.CinemaDetailsPage .navbar-nav .nav-link:focus,
+.CinemaDetailsPage .navbar-nav .nav-link:hover {
+    color: var(--text-primary) !important;
+    text-decoration: none;
+}
+
+.CinemaDetailsPage .navbar-nav .nav-link:hover {
+    color: var(--text-accent) !important;
+}
+
+/* Dropdown */
+.CinemaDetailsPage .dropdown-toggle,
+.CinemaDetailsPage .dropdown-toggle:visited,
+.CinemaDetailsPage .dropdown-toggle:active,
+.CinemaDetailsPage .dropdown-toggle:focus {
+    color: var(--text-primary) !important;
+}
+
+.CinemaDetailsPage .dropdown-toggle:hover {
+    color: var(--text-accent) !important;
+}
+
+.CinemaDetailsPage .dropdown-menu {
+    background-color: var(--bg-secondary) !important;
+    border-color: var(--border-color-light) !important;
+}
+
+.CinemaDetailsPage .dropdown-item {
+    color: var(--text-primary) !important;
+    background-color: transparent !important;
+}
+
+.CinemaDetailsPage .dropdown-item:hover,
+.CinemaDetailsPage .dropdown-item:focus {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+}
+
+.CinemaDetailsPage .dropdown-item:active {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Navbar */
+.CinemaDetailsPage .navbar {
+    background-color: transparent !important;
+}
+
+.CinemaDetailsPage .navbar-nav .nav-link {
+    color: var(--text-primary) !important;
+}
+
+.CinemaDetailsPage .navbar-nav .nav-link:hover {
+    color: var(--text-accent) !important;
+}
+
+/* Forzar que TODOS los elementos de texto usen text-primary - MÁXIMA ESPECIFICIDAD */
+.CinemaDetailsPage .details-container,
+.CinemaDetailsPage .details-container *,
+.CinemaDetailsPage .details-container span,
+.CinemaDetailsPage .details-container p,
+.CinemaDetailsPage .details-container .form-section-title,
+.CinemaDetailsPage .details-container .text-primary,
+.CinemaDetailsPage .details-container .col,
+.CinemaDetailsPage .details-container .row,
+.CinemaDetailsPage .details-container .row .col,
+.CinemaDetailsPage .details-container .row .col span,
+.CinemaDetailsPage .details-container .row .col .text-primary {
+    color: var(--text-primary) !important;
+}
+
+/* Específico para los títulos de sección - MÁXIMA PRIORIDAD */
+.CinemaDetailsPage .details-container .form-section-title,
+.CinemaDetailsPage .form-section-title.text-primary,
+.CinemaDetailsPage span.form-section-title.text-primary,
+.CinemaDetailsPage .details-container span.form-section-title.text-primary,
+.CinemaDetailsPage .row .col span.form-section-title.text-primary {
+    color: var(--text-primary) !important;
+    font-weight: bold !important;
+}
+
+/* Forzar que la dirección también use text-primary */
+.CinemaDetailsPage .details-container .row .col span.text-primary,
+.CinemaDetailsPage .row .col span.text-primary {
+    color: var(--text-primary) !important;
+}
+
+/* Sobrescribir cualquier estilo de Bootstrap o inline */
+.CinemaDetailsPage .details-container *[class*="text-primary"],
+.CinemaDetailsPage .details-container span[class*="text-primary"],
+.CinemaDetailsPage .details-container .form-section-title[class*="text-primary"] {
+    color: var(--text-primary) !important;
 }

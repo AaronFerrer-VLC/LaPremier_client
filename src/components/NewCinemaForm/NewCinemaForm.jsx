@@ -1,33 +1,24 @@
-import { Button, Form, Row, Col } from 'react-bootstrap';
-
-import { useState, useEffect } from 'react';
-
-import axios from 'axios';
-import Loader from '../Loader/Loader';
+import { Form, Row, Col } from 'react-bootstrap';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-const API_URL = import.meta.env.VITE_APP_API_URL
+import { moviesService } from '../../services/movies.service';
+import { cinemasService } from '../../services/cinemas.service';
+import { useApi } from '../../hooks/useApi';
+import { notifySuccess, notifyError } from '../../utils/notifications';
+import logger from '../../utils/logger';
+import { SkeletonForm } from '../SkeletonLoader/SkeletonLoader';
+import { Button } from '../UI';
 
 const NewCinemaForm = () => {
-
-    const [isLoading, setIsLoading] = useState(true)
     const navigate = useNavigate()
 
-    const [movies, setMovies] = useState([])
+    // Fetch movies using useApi hook
+    const { data: movies, loading: isLoadingMovies } = useApi(
+        () => moviesService.getAll(),
+        []
+    )
 
-    useEffect(() => {
-        fetchMovies()
-    }, [])
-
-    const fetchMovies = () => {
-        axios
-            .get(`${API_URL}/movies`)
-            .then(response => {
-                setMovies(response.data)
-                setIsLoading(false)
-            })
-            .catch(err => console.log(err))
-    }
+    const activeMovies = movies?.filter(movie => !movie.isDeleted) || []
 
     const [cinemaData, setCinemaData] = useState({
         name: '',
@@ -181,70 +172,66 @@ const NewCinemaForm = () => {
         })
     }
 
-    const handleFormSubmit = e => {
-
+    const handleFormSubmit = async (e) => {
         e.preventDefault()
 
-        const reqPayload = {
-            ...cinemaData,
-            address: address,
-            price: price,
-            specs: specs,
-            capacity: capacity
-        }
+        try {
+            // Prepare payload
+            const reqPayload = {
+                ...cinemaData,
+                address: address,
+                price: price,
+                specs: specs,
+                capacity: capacity
+            }
 
-        axios
-            .post(`${API_URL}/cinemas`, reqPayload)
-            .then((response) => {
-                const { data: newCinema } = response
+            // Create cinema
+            const response = await cinemasService.create(reqPayload)
+            const newCinema = response.data
 
-                axios
-                    .get(`${API_URL}/movies/`)
-                    .then(response => {
+            // Update movies to include this cinema
+            if (newCinema.movieId && newCinema.movieId.length > 0) {
+                const moviesToUpdate = activeMovies.filter(eachMovie =>
+                    newCinema.movieId.includes(eachMovie.id)
+                )
 
-                        const { data: allMovies } = response
+                const updatePromises = moviesToUpdate.map(eachMovie => {
+                    const newCinemasIds = Array.isArray(eachMovie.cinemaId)
+                        ? [...eachMovie.cinemaId, newCinema.id]
+                        : [eachMovie.cinemaId, newCinema.id].filter(Boolean)
 
-                        const filteredMovies = allMovies.filter(eachMovie => {
-                            return (newCinema.movieId.includes(eachMovie.id))
-                        })
-
-                        filteredMovies.map(eachMovie => {
-
-                            let copyMovieToEdit = {
-                                ...eachMovie
-                            }
-
-                            const newCinemasIds =
-                                Array.isArray(copyMovieToEdit.cinemaId) ?
-                                    copyMovieToEdit.cinemaId :
-                                    [copyMovieToEdit.cinemaId]
-
-                            newCinemasIds.push(newCinema.id)
-
-                            copyMovieToEdit = {
-                                ...eachMovie,
-                                cinemaId: newCinemasIds
-                            }
-
-                            axios
-                                .put(`${API_URL}/movies/${eachMovie.id}`, copyMovieToEdit)
-                                .then(() => { })
-                                .catch(err => console.log(err))
-                        })
+                    return moviesService.update(eachMovie.id, {
+                        ...eachMovie,
+                        cinemaId: newCinemasIds
                     })
+                })
 
+                await Promise.all(updatePromises)
+            }
 
-                alert('HECHO!')
-                navigate(`/cines/detalles/${newCinema.id}`)
-            })
-            .catch(err => console.log(err))
+            notifySuccess('Cine creado correctamente')
+            logger.info('Cinema created successfully', { cinemaId: newCinema.id }, 'NewCinemaForm')
+            navigate(`/cines/detalles/${newCinema.id}`)
+        } catch (error) {
+            logger.error('Failed to create cinema', error, 'NewCinemaForm')
+            notifyError('Error al crear el cine')
+        }
+    }
+
+    if (isLoadingMovies) {
+        return (
+            <div className="NewCineForm mt-5">
+                <Row>
+                    <Col md={{ span: 6, offset: 3 }}>
+                        <SkeletonForm />
+                    </Col>
+                </Row>
+            </div>
+        )
     }
 
     return (
-
-        isLoading ? <Loader /> :
-
-            <div className="NewCineForm mt-5">
+        <div className="NewCineForm mt-5">
 
                 <Row>
                     <Col md={{ span: 6, offset: 3 }}>
@@ -275,8 +262,8 @@ const NewCinemaForm = () => {
                                     }
                                 </div>
 
-                                <Button className="styled-button-2 me-2" size="sm" variant="dark" onClick={addNewCinemaCover}>Añadir foto</Button>
-                                <Button className="styled-button-2 me-2" size="sm" variant="dark" onClick={deleteNewCinemaCover}>Quitar foto</Button>
+                                <Button variant="secondary" size="sm" className="me-2" onClick={addNewCinemaCover}>Añadir foto</Button>
+                                <Button variant="secondary" size="sm" className="me-2" onClick={deleteNewCinemaCover}>Quitar foto</Button>
 
                             </Form.Group>
 
@@ -420,8 +407,8 @@ const NewCinemaForm = () => {
 
                                 </div>
 
-                                <Button className="styled-button-2 me-2" size="sm" variant="dark" onClick={addNewService}>Añadir servicio</Button>
-                                <Button className="styled-button-2 me-2" size="sm" variant="dark" onClick={deletNewService}>Quitar servicio</Button>
+                                <Button variant="secondary" size="sm" className="me-2" onClick={addNewService}>Añadir servicio</Button>
+                                <Button variant="secondary" size="sm" className="me-2" onClick={deletNewService}>Quitar servicio</Button>
 
                             </Form.Group>
 
@@ -440,9 +427,9 @@ const NewCinemaForm = () => {
                                                     value={eachMovieId}>
                                                     <option>Selecciona una película</option>
                                                     {
-                                                        movies.map(elm => {
+                                                        activeMovies.map(elm => {
                                                             return (
-                                                                <option key={elm.id} value={elm.id}>{elm.title.spanish}</option>
+                                                                <option key={elm.id} value={elm.id}>{elm.title?.spanish || elm.title}</option>
                                                             )
                                                         })
                                                     }
@@ -452,13 +439,13 @@ const NewCinemaForm = () => {
                                     }
                                 </div>
 
-                                <Button className="styled-button-2 me-2" size="sm" variant="dark" onClick={addNewMovieId}>Añadir película</Button>
-                                <Button className="styled-button-2 me-2" size="sm" variant="dark" onClick={deletNewMovieId}>Quitar película</Button>
+                                <Button variant="secondary" size="sm" className="me-2" onClick={addNewMovieId}>Añadir película</Button>
+                                <Button variant="secondary" size="sm" className="me-2" onClick={deletNewMovieId}>Quitar película</Button>
 
                             </Form.Group>
 
                             <div className="d-grid mt-5">
-                                <Button className="styled-button-2" variant="dark" type="submit">Crear nuevo cine</Button>
+                                <Button variant="primary" size="lg" type="submit">Crear nuevo cine</Button>
                             </div>
 
                         </Form>

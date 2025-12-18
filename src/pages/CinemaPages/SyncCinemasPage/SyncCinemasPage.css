@@ -1,0 +1,51 @@
+.SyncCinemasPage {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding-top: 20px;
+    padding-bottom: 50px;
+}
+
+.SyncCinemasPage h1,
+.SyncCinemasPage .section-title {
+    color: var(--text-primary) !important;
+    font-family: var(--font-display);
+}
+
+.SyncCinemasPage p,
+.SyncCinemasPage span {
+    color: var(--text-primary);
+}
+
+.SyncCinemasPage .text-secondary {
+    color: var(--text-secondary) !important;
+}
+
+.SyncCinemasPage .nav-tabs {
+    border-bottom-color: var(--border-color-light);
+}
+
+.SyncCinemasPage .nav-tabs .nav-link {
+    color: var(--text-primary) !important;
+    border-color: transparent;
+    background-color: transparent;
+}
+
+.SyncCinemasPage .nav-tabs .nav-link:hover {
+    border-color: var(--border-color-light);
+    background-color: var(--bg-secondary);
+}
+
+.SyncCinemasPage .nav-tabs .nav-link.active {
+    color: var(--text-primary) !important;
+    background-color: var(--bg-secondary) !important;
+    border-color: var(--border-color-light) var(--border-color-light) var(--bg-secondary);
+}
+
+.selected-cinema {
+    background-color: var(--bg-secondary);
+    padding: 2rem;
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--border-color-light);
+}
+

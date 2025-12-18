@@ -1,11 +1,9 @@
-import { Spinner } from "react-bootstrap"
+import { Spinner } from "../UI"
 
 const Loader = () => {
     return (
         <div className="Loader">
-            <Spinner animation="border" role="status">
-                <span className="visual-hidden"></span>
-            </Spinner>
+            <Spinner variant="primary" size="lg" />
         </div>
     )
 }

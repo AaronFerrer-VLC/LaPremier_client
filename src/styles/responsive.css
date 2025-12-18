@@ -1,0 +1,237 @@
+/**
+ * Responsive Design Utilities
+ * Global responsive styles and breakpoints
+ */
+
+/* Breakpoints */
+:root {
+    --breakpoint-xs: 0;
+    --breakpoint-sm: 576px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 992px;
+    --breakpoint-xl: 1200px;
+    --breakpoint-xxl: 1400px;
+}
+
+/* Container Responsive Padding */
+.container,
+.container-fluid {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+@media (min-width: 576px) {
+    .container,
+    .container-fluid {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .container,
+    .container-fluid {
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+}
+
+/* Typography Responsive */
+h1 {
+    font-size: clamp(2rem, 5vw, 4rem);
+}
+
+h2 {
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+h3 {
+    font-size: clamp(1.25rem, 3vw, 2rem);
+}
+
+h4 {
+    font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+}
+
+/* Form Controls Responsive */
+.form-control,
+.form-select {
+    font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+@media (max-width: 576px) {
+    .form-control,
+    .form-select {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+}
+
+/* Buttons Responsive */
+.btn {
+    padding: 0.5rem 1rem;
+    font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+@media (max-width: 576px) {
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    .btn:last-child {
+        margin-bottom: 0;
+    }
+}
+
+/* Cards Responsive */
+.card {
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+    .card-img-top {
+        height: auto;
+        max-height: 300px;
+    }
+}
+
+/* Navigation Responsive */
+@media (max-width: 991px) {
+    .navbar-nav {
+        padding-top: 1rem;
+    }
+
+    .navbar-nav .nav-link {
+        padding: 0.5rem 0;
+    }
+}
+
+/* Tables Responsive */
+@media (max-width: 768px) {
+    .table-responsive {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Images Responsive */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Video Responsive */
+video {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Modal Responsive */
+@media (max-width: 576px) {
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+
+    .modal-content {
+        border-radius: 0.5rem;
+    }
+}
+
+/* Grid Responsive Utilities */
+@media (max-width: 576px) {
+    .row > * {
+        margin-bottom: 1rem;
+    }
+
+    .row > *:last-child {
+        margin-bottom: 0;
+    }
+}
+
+/* Spacing Responsive */
+@media (max-width: 768px) {
+    .p-5 {
+        padding: 2rem !important;
+    }
+
+    .m-5 {
+        margin: 2rem !important;
+    }
+
+    .mt-5 {
+        margin-top: 2rem !important;
+    }
+
+    .mb-5 {
+        margin-bottom: 2rem !important;
+    }
+}
+
+/* Text Responsive */
+@media (max-width: 576px) {
+    .text-center-mobile {
+        text-align: center !important;
+    }
+
+    .text-left-mobile {
+        text-align: left !important;
+    }
+}
+
+/* Hide/Show Utilities */
+@media (max-width: 768px) {
+    .hide-mobile {
+        display: none !important;
+    }
+}
+
+@media (min-width: 769px) {
+    .show-mobile-only {
+        display: none !important;
+    }
+}
+
+/* Touch Targets */
+@media (max-width: 768px) {
+    button,
+    a,
+    input,
+    select,
+    textarea {
+        min-height: 44px; /* iOS recommended touch target */
+        min-width: 44px;
+    }
+}
+
+/* Scroll Behavior */
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        scroll-behavior: smooth;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .navbar,
+    .footer,
+    .btn,
+    .modal {
+        display: none !important;
+    }
+
+    body {
+        font-size: 12pt;
+        line-height: 1.5;
+    }
+
+    a {
+        text-decoration: underline;
+    }
+
+    a[href]:after {
+        content: " (" attr(href) ")";
+    }
+}
+

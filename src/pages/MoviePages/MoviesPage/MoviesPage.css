@@ -1,0 +1,34 @@
+.MoviesPage {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding-top: 20px;
+    padding-bottom: 50px;
+}
+
+.MoviesPage h3,
+.MoviesPage .section-title {
+    color: var(--text-primary) !important;
+    font-family: var(--font-display);
+}
+
+.MoviesPage hr,
+.MoviesPage .border-secondary {
+    border-color: var(--border-color-medium) !important;
+    margin: 1.5rem 0;
+}
+
+.MoviesPage p,
+.MoviesPage span,
+.MoviesPage div {
+    color: var(--text-primary);
+}
+
+.MoviesPage a {
+    color: var(--text-primary) !important;
+}
+
+.MoviesPage a:hover {
+    color: var(--text-accent) !important;
+}
+

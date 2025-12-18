@@ -1,0 +1,55 @@
+.CinemaAPISearch {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    padding: 1rem 0;
+}
+
+.CinemaAPISearch .form-label {
+    color: var(--text-primary) !important;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.CinemaAPISearch .form-control {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color-light) !important;
+}
+
+.CinemaAPISearch .form-control:focus {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--color-accent) !important;
+    box-shadow: 0 0 0 0.25rem rgba(255, 180, 0, 0.25);
+}
+
+.cinemas-results {
+    margin-top: 2rem;
+}
+
+.cinema-result-item {
+    background-color: var(--bg-secondary) !important;
+    border-color: var(--border-color-light) !important;
+    margin-bottom: 0.5rem;
+    border-radius: var(--border-radius-md) !important;
+    transition: all var(--transition-base);
+}
+
+.cinema-result-item:hover {
+    background-color: var(--bg-tertiary) !important;
+    border-color: var(--border-color-medium) !important;
+    transform: translateX(5px);
+}
+
+.cinema-result-item h5 {
+    color: var(--text-primary) !important;
+}
+
+.cinema-result-item p {
+    color: var(--text-secondary) !important;
+}
+
+.cinema-result-item small {
+    color: var(--text-muted) !important;
+}
+

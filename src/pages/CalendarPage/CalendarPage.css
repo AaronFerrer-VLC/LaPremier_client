@@ -1,0 +1,167 @@
+.CalendarPage {
+    min-height: 80vh;
+}
+
+.calendar-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.page-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page-subtitle {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.calendar-controls {
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color-light);
+}
+
+.calendar-grid {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color-light);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.calendar-weekday {
+    text-align: center;
+    font-weight: 600;
+    color: var(--text-secondary);
+    padding: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color-light);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--bg-tertiary);
+    position: relative;
+}
+
+.calendar-day.empty {
+    border: none;
+    cursor: default;
+    background: transparent;
+}
+
+.calendar-day:hover:not(.empty) {
+    background: var(--bg-secondary);
+    border-color: var(--color-accent);
+    transform: translateY(-2px);
+}
+
+.calendar-day.today {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-white);
+    font-weight: 700;
+}
+
+.calendar-day.has-movies {
+    border-color: var(--color-accent-light);
+}
+
+.calendar-day.selected {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-white);
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.day-number {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.movies-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: var(--color-accent);
+    color: var(--color-white);
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.calendar-day.selected .movies-badge {
+    background: var(--color-white);
+    color: var(--color-accent);
+}
+
+.selected-day-movies {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color-light);
+}
+
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 2rem;
+    }
+
+    .calendar-controls {
+        padding: 1rem;
+    }
+
+    .calendar-grid {
+        padding: 1rem;
+    }
+
+    .calendar-day {
+        padding: 0.25rem;
+    }
+
+    .day-number {
+        font-size: 0.875rem;
+    }
+
+    .movies-badge {
+        width: 16px;
+        height: 16px;
+        font-size: 0.625rem;
+    }
+}
+

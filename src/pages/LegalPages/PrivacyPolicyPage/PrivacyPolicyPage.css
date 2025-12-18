@@ -1,0 +1,76 @@
+.PrivacyPolicyPage {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+}
+
+.legal-content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+    color: var(--text-primary);
+}
+
+.legal-title {
+    font-family: var(--font-display);
+    font-size: calc(2.5rem + 1vw);
+    font-weight: bold;
+    color: var(--text-primary);
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.legal-section-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    margin-top: 2rem;
+}
+
+.legal-content p {
+    color: var(--text-primary);
+    line-height: 1.8;
+    margin-bottom: 1rem;
+}
+
+.legal-content ul {
+    color: var(--text-primary);
+    line-height: 1.8;
+    margin-left: 2rem;
+    margin-bottom: 1rem;
+}
+
+.legal-content li {
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.legal-content strong {
+    color: var(--text-primary);
+}
+
+.legal-content a {
+    color: var(--text-accent);
+    text-decoration: none;
+}
+
+.legal-content a:hover {
+    color: var(--color-accent-light);
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .legal-content {
+        padding: 1rem;
+    }
+
+    .legal-title {
+        font-size: 2rem;
+    }
+
+    .legal-section-title {
+        font-size: 1.25rem;
+    }
+}
+

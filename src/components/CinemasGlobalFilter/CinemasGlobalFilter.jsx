@@ -1,41 +1,72 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { Form, ListGroup } from "react-bootstrap"
-
-import axios from "axios"
 import { Link } from "react-router-dom"
-import { TbRuler } from "react-icons/tb"
-
-const API_URL = import.meta.env.VITE_APP_API_URL
-
+import { cinemasService } from "../../services/cinemas.service"
+import { logError } from "../../utils/errorHandler"
+import { debounce } from "../../utils/debounce"
+import "./CinemasGlobalFilter.css"
 
 const CinemasGlobalFilter = ({ filterSelected, handleFilterSelected }) => {
-
-    const [filterValue, setFilterValue] = useState()
+    const [filterValue, setFilterValue] = useState('')
     const [filterResults, setFilterResults] = useState([])
-    const [showFilterResults, setShowFilterResults] = useState()
+    const [showFilterResults, setShowFilterResults] = useState(false)
 
-    const handleFilterChange = e => {
-        handleShowFilterResults(true)
-        const { value } = e.target
-        setFilterValue(value)
-    }
+    const searchCinemas = useCallback(async (query) => {
+        if (!query || query.trim().length < 2) {
+            setFilterResults([])
+            return
+        }
+
+        try {
+            const response = await cinemasService.searchByName(query)
+            setFilterResults(response.data.filter(cinema => !cinema.isDeleted))
+        } catch (err) {
+            logError(err, 'CinemasGlobalFilter')
+            setFilterResults([])
+        }
+    }, [])
+
+    const debouncedSearch = useCallback(
+        debounce((query) => searchCinemas(query), 300),
+        [searchCinemas]
+    )
 
     useEffect(() => {
-        axios
-            .get(`${API_URL}/cinemas/?name_like=${filterValue}`)
-            .then(response => {
-                setFilterResults(response.data)
-            })
-            .catch(err => console.log(err))
-    }, [filterValue])
+        if (filterValue && filterValue.trim().length >= 2) {
+            debouncedSearch(filterValue)
+            setShowFilterResults(true)
+        } else {
+            setFilterResults([])
+            setShowFilterResults(false)
+        }
+    }, [filterValue, debouncedSearch])
 
 
-    const handleShowFilterResults = change => {
-        setShowFilterResults(change)
+    const handleFilterChange = (e) => {
+        const { value } = e.target
+        setFilterValue(value)
+        setShowFilterResults(true)
     }
 
-    const changeFilterSelected = input => {
-        handleFilterSelected(input)
+    const handleFocus = () => {
+        handleFilterSelected("cines")
+        // Si hay texto, mostrar resultados
+        if (filterValue && filterValue.trim().length >= 2) {
+            setShowFilterResults(true)
+        }
+    }
+
+    const handleBlur = () => {
+        // Delay para permitir clicks en los items
+        setTimeout(() => {
+            setShowFilterResults(false)
+            handleFilterSelected("")
+        }, 200)
+    }
+
+    const handleItemClick = (cinema) => {
+        setFilterValue(cinema.name || '')
+        setShowFilterResults(false)
     }
 
     if (filterSelected === 'pelis') {
@@ -46,43 +77,54 @@ const CinemasGlobalFilter = ({ filterSelected, handleFilterSelected }) => {
                 placeholder="Buscar cine"
             />
         )
-
-    } else {
-        return (
-            <div className="CinemasGlobalFilter">
-
-                <Form.Control
-                    type="text"
-                    placeholder="Buscar cine"
-                    className="form-control mr-sm-2"
-                    onChange={handleFilterChange}
-                    onFocus={() => { setFilterResults([]); setFilterValue(''); handleShowFilterResults(false); changeFilterSelected("cines") }}
-                    onBlur={() => { setTimeout(() => handleShowFilterResults(false), 100); changeFilterSelected("") }}
-                    value={filterValue}
-                />
-                <ListGroup className="position-absolute z-1">
-                    {
-                        filterResults.map(elm => {
-
-                            if (showFilterResults) {
-                                return (
-                                    <ListGroup.Item
-                                        key={elm.id}
-                                        as={Link}
-                                        to={`/cines/detalles/${elm.id}`}
-                                        onClick={() => setFilterValue(elm.name)}
-                                    >
-                                        {elm.name}
-                                    </ListGroup.Item>
-                                )
-                            }
-                        })
-                    }
-                </ListGroup>
-            </div >
-        )
-
     }
+
+    return (
+        <div className="CinemasGlobalFilter position-relative">
+            <Form.Control
+                type="text"
+                placeholder="Buscar cine"
+                className="form-control mr-sm-2"
+                onChange={handleFilterChange}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                value={filterValue}
+            />
+            {showFilterResults && filterResults.length > 0 && (
+                <ListGroup 
+                    className="position-absolute w-100 mt-1 autocomplete-dropdown" 
+                    style={{ 
+                        zIndex: 1000, 
+                        maxHeight: '300px', 
+                        overflowY: 'auto'
+                    }}
+                >
+                    {filterResults.map(cinema => {
+                        const cinemaId = cinema.id || cinema._id;
+                        if (!cinemaId) return null;
+                        return (
+                            <ListGroup.Item
+                                key={cinemaId}
+                                as={Link}
+                                to={`/cines/detalles/${cinemaId}`}
+                                onClick={() => handleItemClick(cinema)}
+                                action
+                                className="autocomplete-item"
+                                style={{
+                                    cursor: 'pointer',
+                                    border: 'none',
+                                    borderBottom: '1px solid var(--border-color-light)',
+                                    padding: '0.75rem 1rem'
+                                }}
+                            >
+                                {cinema.name}
+                            </ListGroup.Item>
+                        );
+                    })}
+                </ListGroup>
+            )}
+        </div>
+    )
 
 }
 

@@ -1,4 +1,5 @@
 import { useState } from "react"
+import PropTypes from "prop-types"
 import { Button, ButtonGroup, Form, Row, Col } from "react-bootstrap"
 import { FaStar } from "react-icons/fa"
 
@@ -79,7 +80,7 @@ const NewMovieReviewForm = ({ onAddReview, onCloseModal }) => {
                         {errors.comment && <small className="text-danger">{errors.comment}</small>}
                     </Form.Group>
                     <ButtonGroup size="sm">
-                        <Button type="submit" variant="dark" className="mt-3">
+                        <Button type="submit" variant="primary" size="md" className="mt-3">
                             Enviar Comentario
                         </Button>
 
@@ -88,6 +89,11 @@ const NewMovieReviewForm = ({ onAddReview, onCloseModal }) => {
             </Col>
         </Row>
     )
+}
+
+NewMovieReviewForm.propTypes = {
+    onAddReview: PropTypes.func.isRequired,
+    onCloseModal: PropTypes.func.isRequired
 }
 
 export default NewMovieReviewForm

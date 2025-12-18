@@ -1,0 +1,61 @@
+.GenresPage {
+  min-height: 100vh;
+}
+
+.page-title {
+  font-family: var(--font-display);
+  font-size: calc(2rem + 1vw);
+  font-weight: bold;
+  color: var(--text-primary) !important;
+  margin-bottom: 0.5rem;
+}
+
+.genre-card {
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.5rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.genre-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-accent);
+}
+
+.genre-card.active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: white;
+}
+
+.genre-card.active .genre-name {
+  color: white !important;
+}
+
+.genre-name {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.genre-movies-section {
+  margin-top: 3rem;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: calc(1.5rem + 0.5vw);
+  font-weight: bold;
+  color: var(--text-primary) !important;
+}
+

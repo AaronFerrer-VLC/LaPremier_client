@@ -1,0 +1,42 @@
+.NowPlayingPage {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding-top: 20px;
+    padding-bottom: 50px;
+}
+
+.NowPlayingPage h1,
+.NowPlayingPage .section-title {
+    color: var(--text-primary) !important;
+    font-family: var(--font-display);
+    margin-bottom: 1rem;
+}
+
+.NowPlayingPage p,
+.NowPlayingPage span {
+    color: var(--text-primary);
+}
+
+.NowPlayingPage .text-secondary {
+    color: var(--text-secondary) !important;
+}
+
+.NowPlayingPage .Row {
+    margin-bottom: 2rem;
+}
+
+.NowPlayingPage .MovieCard {
+    height: 100%;
+}
+
+/* Ensure consistent card heights */
+.NowPlayingPage .Col {
+    display: flex;
+    flex-direction: column;
+}
+
+.NowPlayingPage .Col > * {
+    flex: 1;
+}
+

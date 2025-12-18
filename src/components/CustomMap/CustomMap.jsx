@@ -1,13 +1,32 @@
 import { useState, useEffect } from 'react'
-import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
+import { GoogleMap, Marker } from '@react-google-maps/api';
+import logger from '../../utils/logger';
+import { useGoogleMaps } from '../../hooks/useGoogleMaps';
 
 const CustomMap = (address) => {
-
     const [addressValue, setAddressValue] = useState(address)
     const [coordinates, setCoordinates] = useState()
     const [marker, setMarker] = useState(false)
 
-    useEffect(() => { handleMap() }, [])
+    const { isLoaded } = useGoogleMaps()
+
+    const getCoordinates = addressCorrected => {
+        if (!isLoaded || !window.google || !window.google.maps) {
+            logger.error('Google Maps API not loaded', {}, 'CustomMap');
+            return;
+        }
+
+        const geocoder = new window.google.maps.Geocoder();
+
+        geocoder.geocode({ address: addressCorrected }, (results, status) => {
+            if (status === window.google.maps.GeocoderStatus.OK) {
+                const location = results[0].geometry.location;
+                setCoordinates({ lat: location.lat(), lng: location.lng() })
+            } else {
+                logger.error('Geocodificación fallida', { status, address: addressCorrected }, 'CustomMap');
+            }
+        });
+    }
 
     const handleMap = () => {
         const fullAddress = `${addressValue.address.street} ${addressValue.address.city} ${addressValue.address.country}`
@@ -15,26 +34,11 @@ const CustomMap = (address) => {
         getCoordinates(addressCorrected)
     }
 
-    const getCoordinates = addressCorrected => {
-
-        const geocoder = new google.maps.Geocoder();
-
-        geocoder.geocode({ address: addressCorrected }, (results, status) => {
-            if (status === google.maps.GeocoderStatus.OK) {
-
-                const location = results[0].geometry.location;
-
-                setCoordinates({ lat: location.lat(), lng: location.lng() })
-
-            } else {
-                console.error('Geocodificación fallida:', status);
-            }
-        });
-    }
-
-    const { isLoaded } = useJsApiLoader({
-        googleMapsApiKey: "AIzaSyAkBMHV6MJbVt_LyNMzNEO3eGdlQMz-qIw"
-    })
+    useEffect(() => { 
+        if (isLoaded) {
+            handleMap();
+        }
+    }, [isLoaded])
 
     const [map, setMap] = useState(null)
 
@@ -46,7 +50,6 @@ const CustomMap = (address) => {
     }
 
     return isLoaded && coordinates && (
-
         <div>
             <GoogleMap
                 mapContainerStyle={{ height: '300px' }}

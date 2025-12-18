@@ -20,3 +20,40 @@ a {
     transform: scale(1.05);
     box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
 }
+
+.cinema-icon-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 12px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+    min-width: 60px;
+    min-height: 70px;
+    gap: 5px;
+}
+
+.cinema-icon-container:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.1);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.cinema-icon {
+    color: white;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    display: block;
+}
+
+.cinema-icon-label {
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}

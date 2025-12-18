@@ -1,0 +1,72 @@
+.EnhancedMap {
+    margin: 1.5rem 0;
+}
+
+.EnhancedMap.loading {
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color-light);
+}
+
+.map-placeholder {
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.map-placeholder svg {
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.map-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.map-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.route-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.map-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.map-container {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-color-light);
+}
+
+@media (max-width: 768px) {
+    .map-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .map-actions {
+        width: 100%;
+    }
+
+    .map-actions .Button {
+        flex: 1;
+    }
+}
+

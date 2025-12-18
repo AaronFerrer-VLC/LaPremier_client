@@ -1,11 +1,596 @@
-.hover-zoom {
-    transition: transform 0.3s ease;
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
+.MovieDetailsPage {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding-top: 20px;
+    padding-bottom: 50px;
 }
 
-.hover-zoom:hover {
-    transform: scale(1.2);
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+/* Navigation Buttons */
+.back-home-btn,
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Movie Title */
+.movie-title-main {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+}
+
+.movie-title-original {
+    font-size: 1.25rem;
+    font-style: italic;
+    margin-bottom: 1rem;
+}
+
+/* Poster Section */
+.movie-poster-wrapper {
+    width: 100%;
+    position: relative;
+}
+
+.movie-poster-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease;
+    background: var(--bg-secondary);
+    width: 100%;
+    aspect-ratio: 2/3;
+    min-height: 400px;
+    display: flex;
+    align-items: stretch;
+}
+
+.movie-poster-container:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+
+.movie-poster-image {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: 12px;
+    object-fit: cover;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color-light);
+    opacity: 1 !important;
+    transition: opacity 0.3s ease;
+    visibility: visible !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+}
+
+/* Ensure poster image is always visible when loaded */
+.movie-poster-container img.movie-poster-image {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+}
+
+.movie-poster-placeholder {
+    width: 100%;
+    aspect-ratio: 2/3;
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed var(--border-color-medium);
+    padding: 2rem;
+    position: relative;
+    min-height: 400px;
+}
+
+.movie-poster-placeholder-fallback {
+    position: absolute;
+    z-index: 5;
+}
+
+.placeholder-icon {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+    opacity: 0.6;
+    filter: grayscale(0.3);
+}
+
+.placeholder-text {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.trailer-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    cursor: pointer;
+    border-radius: 12px;
+    z-index: 3;
+    pointer-events: auto;
+}
+
+.movie-poster-container:hover .trailer-overlay {
+    opacity: 1;
+}
+
+.trailer-overlay:hover {
+    background: rgba(0, 0, 0, 0.85);
+    opacity: 1;
+}
+
+.trailer-overlay svg {
+    color: white;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+}
+
+.trailer-text {
+    color: white;
+    font-weight: 600;
+    font-size: 1.1rem;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+}
+
+.favorite-button-overlay {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 10;
+}
+
+/* Streaming Platforms Section */
+.streaming-platforms-section {
+    background: var(--bg-secondary);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Cinemas Section */
+.cinemas-section {
+    background: var(--bg-secondary);
+    padding: 1.5rem;
+    border-radius: 12px;
+}
+
+.section-subtitle {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.cinema-list-item {
+    background: var(--bg-tertiary) !important;
+    border: 1px solid var(--border-color-light) !important;
+    border-radius: 8px !important;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.cinema-list-item:hover {
+    background: var(--bg-primary) !important;
+    transform: translateX(4px);
+}
+
+.cinema-link {
+    color: var(--text-primary) !important;
+    text-decoration: none;
+    font-weight: 500;
+    display: block;
+    padding: 0.5rem;
+}
+
+.cinema-link:hover {
+    color: var(--text-accent) !important;
+}
+
+/* Movie Details Grid */
+.movie-details-grid {
+    background: var(--bg-secondary);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+}
+
+.detail-item {
+    margin-bottom: 1.5rem;
+}
+
+.detail-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.detail-value {
+    font-size: 1rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* Synopsis Section */
+.synopsis-section {
+    background: var(--bg-secondary);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--color-accent);
+}
+
+.synopsis-text {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+/* Casting Section */
+.casting-section {
+    background: var(--bg-secondary);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+}
+
+.casting-scroll {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-accent) var(--bg-tertiary);
+}
+
+.casting-scroll::-webkit-scrollbar {
+    height: 8px;
+}
+
+.casting-scroll::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+}
+
+.casting-scroll::-webkit-scrollbar-thumb {
+    background: var(--color-accent);
+    border-radius: 4px;
+}
+
+.actor-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 120px;
+    text-align: center;
+    transition: transform 0.2s ease;
+}
+
+.actor-card.clickable:hover {
+    transform: scale(1.05);
+    cursor: pointer;
+}
+
+.clickable-person {
+    transition: color 0.2s ease;
+}
+
+.clickable-person:hover {
+    color: var(--color-accent) !important;
+}
+
+.actor-photo {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border: 3px solid var(--color-accent);
+    margin-bottom: 0.75rem;
+    transition: transform 0.3s ease;
+}
+
+.actor-photo:hover {
+    transform: scale(1.1);
+}
+
+.actor-photo-placeholder {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    border: 3px solid var(--color-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.actor-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    word-break: break-word;
+}
+
+/* Rating Section */
+.rating-section {
+    background: var(--bg-secondary);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+}
+
+.rating-display {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.rating-number {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.rating-stars {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.star-icon {
+    font-size: 1.5rem;
+}
+
+.rating-count {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.no-rating {
+    padding: 1rem 0;
+}
+
+.rate-button {
+    white-space: nowrap;
+}
+
+/* Reviews Section */
+.reviews-list {
+    max-height: 500px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-accent) var(--bg-tertiary);
+}
+
+.reviews-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.reviews-list::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+}
+
+.reviews-list::-webkit-scrollbar-thumb {
+    background: var(--color-accent);
+    border-radius: 4px;
+}
+
+.review-item {
+    background: var(--bg-tertiary) !important;
+    border: 1px solid var(--border-color-light) !important;
+    border-radius: 8px !important;
+    padding: 1.25rem !important;
+    margin-bottom: 1rem;
+    transition: all 0.2s ease;
+}
+
+.review-item:hover {
+    background: var(--bg-secondary) !important;
+    transform: translateX(4px);
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.review-author {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.review-comment {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+}
+
+.review-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.review-rating .star {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    transition: color 0.2s ease;
+}
+
+.review-rating .star.filled {
+    color: #ffb400;
+}
+
+.rating-text {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.no-reviews {
+    padding: 3rem 1rem;
+}
+
+/* Accordion Styles */
+.MovieDetailsPage .accordion {
+    --bs-accordion-bg: var(--bg-secondary);
+    --bs-accordion-border-color: var(--border-color-light);
+    --bs-accordion-color: var(--text-primary);
+    --bs-accordion-btn-color: var(--text-primary);
+    --bs-accordion-btn-bg: var(--bg-secondary);
+    --bs-accordion-active-color: var(--text-primary);
+    --bs-accordion-active-bg: var(--bg-tertiary);
+    --bs-accordion-btn-focus-border-color: var(--color-accent);
+    --bs-accordion-btn-focus-box-shadow: 0 0 0 0.25rem rgba(255, 180, 0, 0.25);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.MovieDetailsPage .accordion-button {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color-light) !important;
+    font-weight: 600;
+    font-size: 1.1rem;
+    padding: 1.25rem;
+}
+
+.MovieDetailsPage .accordion-button:not(.collapsed) {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+}
+
+.MovieDetailsPage .accordion-body {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    padding: 1.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .movie-poster-wrapper {
+        position: static;
+    }
+    
+    .movie-title-main {
+        font-size: 2rem;
+    }
+    
+    .rating-number {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .movie-title-main {
+        font-size: 1.75rem;
+    }
+    
+    .movie-details-grid {
+        padding: 1rem;
+    }
+    
+    .synopsis-section,
+    .casting-section,
+    .rating-section {
+        padding: 1rem;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+    }
+    
+    .synopsis-text {
+        font-size: 1rem;
+    }
+    
+    .actor-card {
+        min-width: 100px;
+    }
+    
+    .actor-photo,
+    .actor-photo-placeholder {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .rating-display {
+        align-items: center;
+        text-align: center;
+    }
+    
+    .rate-button {
+        width: 100%;
+        margin-top: 1rem;
+    }
+}
+
+/* Streaming Platform Buttons */
+.streaming-platform-button {
+    transition: all 0.2s ease;
+}
+
+.streaming-platform-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Text Colors */
+.MovieDetailsPage .text-primary {
+    color: var(--text-primary) !important;
+}
+
+.MovieDetailsPage .text-secondary {
+    color: var(--text-secondary) !important;
+}
+
+.MovieDetailsPage strong {
+    color: var(--text-primary) !important;
 }

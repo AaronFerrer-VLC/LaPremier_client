@@ -1,0 +1,42 @@
+.person-details {
+  padding: 1rem 0;
+}
+
+.person-photo {
+  width: 100%;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.person-photo-placeholder {
+  width: 100%;
+  aspect-ratio: 2/3;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+}
+
+.biography-section {
+  margin-top: 2rem;
+}
+
+.biography-text {
+  line-height: 1.8;
+  color: var(--text-primary);
+  text-align: justify;
+}
+
+.also-known-section {
+  margin-top: 2rem;
+}
+
+.also-known-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+

@@ -1,0 +1,28 @@
+.CitySelector {
+  padding: 1rem 0;
+}
+
+.city-selector-btn {
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+}
+
+.popular-cities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.city-chip {
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--border-radius-md);
+  padding: 0.5rem 1rem;
+  transition: all var(--transition-base);
+}
+
+.city-chip:hover {
+  background-color: var(--bg-overlay-light);
+  border-color: var(--border-color-medium);
+  transform: translateY(-2px);
+}
+

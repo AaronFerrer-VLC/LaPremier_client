@@ -1,0 +1,84 @@
+.NewMovieForm {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding-top: 20px;
+    padding-bottom: 50px;
+}
+
+.NewMovieForm .form {
+    background-color: var(--bg-secondary);
+    padding: 2rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color-light);
+}
+
+.NewMovieForm label,
+.NewMovieForm .form-label {
+    color: var(--text-primary) !important;
+    font-weight: 600;
+}
+
+.NewMovieForm .form-control,
+.NewMovieForm input,
+.NewMovieForm textarea,
+.NewMovieForm select {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color-light) !important;
+}
+
+.NewMovieForm .form-control:focus,
+.NewMovieForm input:focus,
+.NewMovieForm textarea:focus,
+.NewMovieForm select:focus {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--color-accent) !important;
+    box-shadow: 0 0 0 0.25rem rgba(255, 180, 0, 0.25);
+}
+
+.NewMovieForm .form-control::placeholder {
+    color: var(--text-secondary) !important;
+}
+
+.NewMovieForm .form-check-input {
+    background-color: var(--bg-primary);
+    border-color: var(--border-color-light);
+}
+
+.NewMovieForm .form-check-input:checked {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+}
+
+.NewMovieForm .form-check-label {
+    color: var(--text-primary) !important;
+}
+
+/* Tabs */
+.NewMovieForm .nav-tabs {
+    border-bottom-color: var(--border-color-light);
+}
+
+.NewMovieForm .nav-tabs .nav-link {
+    color: var(--text-primary) !important;
+    border-color: transparent;
+    background-color: transparent;
+}
+
+.NewMovieForm .nav-tabs .nav-link:hover {
+    border-color: var(--border-color-light);
+    background-color: var(--bg-secondary);
+}
+
+.NewMovieForm .nav-tabs .nav-link.active {
+    color: var(--text-primary) !important;
+    background-color: var(--bg-secondary) !important;
+    border-color: var(--border-color-light) var(--border-color-light) var(--bg-secondary);
+}
+
+.NewMovieForm .tab-content {
+    color: var(--text-primary);
+}
+
