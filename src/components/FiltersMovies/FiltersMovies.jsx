@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Form, Row, Col } from 'react-bootstrap';
 import { Button, Select } from '../UI';
 import { moviesService } from '../../services/movies.service';
 import { useApi } from '../../hooks/useApi';
+import { ENV } from '../../config/env';
 import logger from '../../utils/logger';
 import "./FiltersMovies.css"
 
@@ -12,26 +13,60 @@ const Filters = ({ handleFilterData }) => {
         country: '',
         language: ''
     });
+    const [tmdbMovies, setTmdbMovies] = useState([]);
 
-    // Fetch movies using useApi hook
-    const { data: movies } = useApi(
+    // Fetch local movies using useApi hook (fallback)
+    const { data: localMovies } = useApi(
         () => moviesService.getAll(),
         []
     )
 
-    // Extract unique values from movies
-    const activeMovies = movies?.filter(movie => !movie.isDeleted) || []
+    // Fetch TMDB movies if available
+    useEffect(() => {
+        const loadTMDBMovies = async () => {
+            if (ENV.HAS_TMDB) {
+                try {
+                    const movies = await moviesService.getAllNowPlayingFromTMDB();
+                    setTmdbMovies(movies);
+                } catch (error) {
+                    logger.error('Failed to load TMDB movies for filters', error, 'FiltersMovies');
+                    setTmdbMovies([]);
+                }
+            }
+        };
+        loadTMDBMovies();
+    }, []);
+
+    // Use TMDB movies if available, otherwise use local movies
+    const activeMovies = ENV.HAS_TMDB && tmdbMovies.length > 0 
+        ? tmdbMovies 
+        : (localMovies?.filter(movie => !movie.isDeleted) || []);
     
     const genders = useMemo(() => {
-        return [...new Set(activeMovies.flatMap(movie => movie.gender || []))].filter(Boolean)
+        const allGenders = activeMovies.flatMap(movie => {
+            if (Array.isArray(movie.gender)) {
+                return movie.gender;
+            }
+            return movie.gender ? [movie.gender] : [];
+        });
+        return [...new Set(allGenders)].filter(Boolean).sort();
     }, [activeMovies])
 
     const countries = useMemo(() => {
-        return [...new Set(activeMovies.map(movie => movie.country).filter(Boolean))]
+        const allCountries = activeMovies
+            .map(movie => movie.country)
+            .filter(Boolean);
+        return [...new Set(allCountries)].sort();
     }, [activeMovies])
 
     const languages = useMemo(() => {
-        return [...new Set(activeMovies.map(movie => movie.language).filter(Boolean))]
+        const allLanguages = activeMovies
+            .map(movie => {
+                // Use displayLanguage if available, otherwise use language
+                return movie.displayLanguage || movie.language;
+            })
+            .filter(Boolean);
+        return [...new Set(allLanguages)].sort();
     }, [activeMovies])
 
     const handleFilterChange = (e) => {

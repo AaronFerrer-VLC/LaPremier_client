@@ -12,6 +12,7 @@ import { useState } from 'react'
 
 import LoginForm from './components/LoginForm/LoginForm'
 import { Modal } from './components/UI'
+import SkipLinks from './components/SkipLinks/SkipLinks'
 
 const App = () => {
 
@@ -33,11 +34,14 @@ const App = () => {
 
 
     <div className='App'>
+      <SkipLinks />
       <ScrollToTop />
       
       <Navigation currentFamilyPath={currentFamilyPath} setShowModal={setShowModal} />
 
-      <AppRoutes currentFamilyPath={currentFamilyPath} />
+      <main id="main-content" role="main">
+        <AppRoutes currentFamilyPath={currentFamilyPath} />
+      </main>
 
       <Footer currentFamilyPath={currentFamilyPath} />
 

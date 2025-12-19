@@ -187,12 +187,6 @@ const CalendarPage = () => {
             </h1>
             <p className="page-subtitle">Descubre qué películas se estrenan cada día</p>
           </Col>
-          <Col xs="auto">
-            <Button variant="secondary" as={Link} to="/">
-              <FaHome className="me-2" />
-              Volver a la Home
-            </Button>
-          </Col>
         </Row>
       </div>
 
@@ -329,6 +323,14 @@ const CalendarPage = () => {
           )}
         </>
       )}
+
+      {/* Botón de volver a la home al final */}
+      <div className="text-center mt-5 mb-4">
+        <Button variant="secondary" as={Link} to="/" size="lg">
+          <FaHome className="me-2" />
+          Volver a la Home
+        </Button>
+      </div>
     </Container>
   );
 };

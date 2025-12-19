@@ -67,7 +67,8 @@ const NowPlayingPage = () => {
       try {
         setLoadingMovies(true);
         setError(null);
-        const movies = await moviesService.getNowPlayingFromTMDB(1);
+        // Load all pages of now playing movies
+        const movies = await moviesService.getAllNowPlayingFromTMDB();
         setNowPlayingMovies(movies);
       } catch (err) {
         logger.error('Failed to fetch now playing movies', err, 'NowPlayingPage');

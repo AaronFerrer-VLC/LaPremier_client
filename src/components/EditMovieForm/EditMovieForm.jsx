@@ -3,17 +3,28 @@ import { Form, CloseButton, Row, Col } from 'react-bootstrap';
 import { Button } from '../UI';
 import Loader from "../Loader/Loader"
 import { useNavigate, useParams } from "react-router-dom"
-import axios from "axios"
+import { useCinemas } from '../../hooks/useCinemas'
+import { useMovie, useUpdateMovie } from '../../hooks/useMovies'
+import { notifySuccess, notifyError } from '../../utils/notifications'
 import logger from '../../utils/logger'
-
-const API_URL = import.meta.env.VITE_APP_API_URL
+import { sanitizeString, sanitizeUrl, sanitizeNumber, sanitizeArray } from '../../utils/sanitize'
 
 const EditMovieForm = () => {
-
     const { movieId } = useParams()
     const navigate = useNavigate()
-    const [isLoading, setIsLoading] = useState(true)
-    const [cinemas, setCinemas] = useState([])
+    
+    // Fetch cinemas using React Query
+    const { data: cinemasData = [], isLoading: isLoadingCinemas } = useCinemas()
+    const cinemas = cinemasData.filter(c => !c.isDeleted)
+    
+    // Fetch movie using React Query
+    const { data: movie, isLoading: isLoadingMovie } = useMovie(movieId, {
+        enabled: !!movieId && movieId !== 'undefined',
+    })
+    
+    // Update movie mutation
+    const updateMovieMutation = useUpdateMovie()
+    
     const [movieData, setMovieData] = useState({
         poster: '',
         country: '',
@@ -30,65 +41,85 @@ const EditMovieForm = () => {
         casting: [{ name: '', photo: '' }]
     })
 
-    useEffect(() => {
-        fetchCinemas()
-        fetchMovieData()
-    }, [])
-
-    const fetchCinemas = async () => {
-        try {
-            const response = await axios.get(`${API_URL}/cinemas`)
-            setCinemas(response.data)
-            setIsLoading(false)
-        } catch (err) {
-            logger.error('Failed to fetch cinemas', err, 'EditMovieForm')
-            setIsLoading(false)
-        }
-    }
-
     const [title, setTitle] = useState({
         original: '',
         spanish: ''
     })
 
-    const fetchMovieData = () => {
-        axios
-            .get(`${API_URL}/movies/${movieId}`)
-            .then(response => {
-                const { data: movieData } = response
-                setMovieData(movieData)
-                setTitle(movieData.title)
+    // Initialize form data when movie loads
+    useEffect(() => {
+        if (movie) {
+            setMovieData({
+                poster: movie.poster || '',
+                country: movie.country || '',
+                language: movie.language || '',
+                duration: movie.duration || 0,
+                gender: Array.isArray(movie.gender) ? movie.gender : [''],
+                calification: movie.calification || '',
+                released: movie.released !== undefined ? movie.released : true,
+                date: movie.date || '',
+                director: movie.director || '',
+                trailer: movie.trailer || '',
+                description: movie.description || '',
+                cinemaId: Array.isArray(movie.cinemaId) ? movie.cinemaId : [],
+                casting: Array.isArray(movie.casting) && movie.casting.length > 0 
+                    ? movie.casting 
+                    : [{ name: '', photo: '' }]
             })
-    }
+            setTitle(movie.title || { original: '', spanish: '' })
+        }
+    }, [movie])
+    
+    const isLoading = isLoadingCinemas || isLoadingMovie
 
     const handleTitleChange = (e) => {
         const { name, value } = e.target
-        setTitle({ ...title, [name]: value })
+        setTitle({ ...title, [name]: sanitizeString(value, { maxLength: 200 }) })
     }
+    
     const handleCinemaChange = (e, idx) => {
         const { value } = e.target
-        const cinemasCopy = [movieData.cinemaId]
-        cinemasCopy[idx] = value
-        const filteredCinemas = cinemasCopy.filter(cinema => cinema !== "")
+        const cinemaId = sanitizeNumber(value, { integer: true })
+        if (cinemaId === null) return
+        
+        const cinemasCopy = Array.isArray(movieData.cinemaId) ? [...movieData.cinemaId] : []
+        cinemasCopy[idx] = cinemaId
+        const filteredCinemas = cinemasCopy.filter(cinema => cinema !== "" && cinema !== null)
         setMovieData({ ...movieData, cinemaId: filteredCinemas })
     }
 
     const handleMovieChange = (e) => {
         const { name, value, checked, type } = e.target;
-        const result = type === 'checkbox' ? checked : value
-        setMovieData({ ...movieData, [name]: result });
+        let sanitizedValue;
+        
+        if (type === 'checkbox') {
+            sanitizedValue = checked;
+        } else if (type === 'number') {
+            sanitizedValue = sanitizeNumber(value, { min: 0, integer: name === 'duration' });
+        } else if (name === 'poster' || name === 'trailer') {
+            sanitizedValue = sanitizeUrl(value) || value;
+        } else {
+            sanitizedValue = sanitizeString(value, { maxLength: name === 'description' ? 5000 : 500 });
+        }
+        
+        setMovieData({ ...movieData, [name]: sanitizedValue });
     }
 
     const handleGenderChange = (e, idx) => {
         const { value } = e.target
+        const sanitizedValue = sanitizeString(value, { maxLength: 50 })
         const gendersCopy = [...movieData.gender]
-        gendersCopy[idx] = value
+        gendersCopy[idx] = sanitizedValue
         setMovieData({ ...movieData, gender: gendersCopy })
     }
+    
     const handleCastingChange = (e, idx, field) => {
         const { value } = e.target
+        const sanitizedValue = field === 'photo' 
+            ? (sanitizeUrl(value) || value)
+            : sanitizeString(value, { maxLength: 200 })
         const updatedCasting = [...movieData.casting]
-        updatedCasting[idx][field] = value
+        updatedCasting[idx][field] = sanitizedValue
         setMovieData({ ...movieData, casting: updatedCasting })
     }
     const addNewCinema = () => {
@@ -129,22 +160,49 @@ const EditMovieForm = () => {
         setMovieData({ ...movieData, casting: updatedCasting })
 
     }
-    const handleFormSubmit = (e) => {
+    const handleFormSubmit = async (e) => {
         e.preventDefault();
-        const reqPayload = {
-            ...movieData,
-            title: title
+        
+        // Sanitize form data
+        const sanitizedData = {
+            poster: sanitizeUrl(movieData.poster) || movieData.poster,
+            country: sanitizeString(movieData.country, { maxLength: 100 }),
+            language: sanitizeString(movieData.language, { maxLength: 10 }),
+            duration: sanitizeNumber(movieData.duration, { min: 1, max: 1000, integer: true }) || 0,
+            gender: sanitizeArray(movieData.gender, (g) => sanitizeString(g, { maxLength: 50 })),
+            calification: sanitizeString(movieData.calification, { maxLength: 10 }),
+            released: Boolean(movieData.released),
+            date: sanitizeString(movieData.date, { maxLength: 50 }),
+            director: sanitizeString(movieData.director, { maxLength: 200 }),
+            trailer: sanitizeUrl(movieData.trailer) || movieData.trailer,
+            description: sanitizeString(movieData.description, { maxLength: 5000 }),
+            cinemaId: sanitizeArray(movieData.cinemaId, (id) => sanitizeNumber(id, { integer: true })),
+            casting: sanitizeArray(movieData.casting, (actor) => ({
+                name: sanitizeString(actor.name, { maxLength: 200 }),
+                photo: sanitizeUrl(actor.photo) || actor.photo
+            }))
+        }
+        
+        const sanitizedTitle = {
+            original: sanitizeString(title.original, { maxLength: 200 }),
+            spanish: sanitizeString(title.spanish, { maxLength: 200 })
         }
 
-        axios
-            .put(`${API_URL}/movies/${movieId}`, reqPayload)
-            .then(response => {
-                logger.info('Movie updated successfully', { movieId: response.data.id }, 'EditMovieForm')
-                navigate(`/peliculas/detalles/${response.data.id}`)
+        try {
+            await updateMovieMutation.mutateAsync({
+                id: movieId,
+                data: {
+                    ...sanitizedData,
+                    title: sanitizedTitle
+                }
             })
-            .catch(err => {
-                logger.error('Failed to update movie', err, 'EditMovieForm')
-            })
+            
+            notifySuccess('Película actualizada correctamente')
+            navigate(`/peliculas/detalles/${movieId}`)
+        } catch (err) {
+            logger.error('Failed to update movie', err, 'EditMovieForm')
+            notifyError('Error al actualizar la película')
+        }
     }
 
     return (

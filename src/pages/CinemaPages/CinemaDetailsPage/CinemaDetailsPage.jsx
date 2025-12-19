@@ -4,12 +4,13 @@ import { FaGlasses, FaClosedCaptioning, FaWheelchair, FaHome, FaArrowLeft } from
 import { Container, Image, Row, Col, Carousel, Stack, Nav, Navbar, NavDropdown } from 'react-bootstrap'
 import { cinemasService } from '../../../services/cinemas.service'
 import { moviesService } from '../../../services/movies.service'
-import { useApi } from '../../../hooks/useApi'
+import { useCinema } from '../../../hooks/useCinemas'
 import { notifySuccess, notifyError } from '../../../utils/notifications'
 import logger from '../../../utils/logger'
 import { SkeletonDetails } from '../../../components/SkeletonLoader/SkeletonLoader'
 import { Button, Badge, Card, Modal, Alert } from '../../../components/UI'
 import { ENV } from '../../../config/env'
+import SEO from '../../../components/SEO/SEO'
 
 import "./CinemaDetailsPage.css"
 import EnhancedMap from '../../../components/EnhancedMap/EnhancedMap'
@@ -22,26 +23,10 @@ const CinemaDetailsPage = () => {
     const [showModal, setShowModal] = useState(false)
     const navigate = useNavigate()
 
-    // Fetch cinema details using useApi hook
-    const { data: cinema, loading: isLoadingCinema, error: cinemaError } = useApi(
-        async () => {
-            if (!cinemaId || cinemaId === 'undefined') {
-                return Promise.reject(new Error('Cinema ID is required'));
-            }
-            const response = await cinemasService.getById(cinemaId);
-            logger.info('Cinema loaded', {
-                cinemaId: cinemaId,
-                cinemaName: response.data?.name,
-                movieId: response.data?.movieId,
-                movieIdType: Array.isArray(response.data?.movieId) ? 'array' : typeof response.data?.movieId,
-                movieIdLength: Array.isArray(response.data?.movieId) ? response.data.movieId.length : (response.data?.movieId ? 1 : 0),
-                movieIdSample: Array.isArray(response.data?.movieId) ? response.data.movieId.slice(0, 5) : [response.data?.movieId]
-            }, 'CinemaDetailsPage');
-            return response;
-        },
-        [cinemaId],
-        !!cinemaId && cinemaId !== 'undefined' // Only execute if cinemaId is valid
-    )
+    // Fetch cinema details using React Query
+    const { data: cinema, isLoading: isLoadingCinema, error: cinemaError } = useCinema(cinemaId, {
+        enabled: !!cinemaId && cinemaId !== 'undefined',
+    });
 
     // Fetch movies for this cinema - load specific movies by ID from TMDB
     // Since all movies come from TMDB, we fetch them directly by the IDs stored in cinema.movieId
@@ -231,8 +216,22 @@ const CinemaDetailsPage = () => {
         )
     }
 
+    const cinemaName = cinema?.name || 'Cine';
+    const cinemaDescription = `Descubre ${cinemaName}. Información completa, películas en cartelera, ubicación, servicios y más.`;
+    const cinemaImage = cinema?.cover?.[0] || 'https://res.cloudinary.com/dhluctrie/image/upload/v1731516947/favicon.png';
+    const cinemaUrl = typeof window !== 'undefined' ? window.location.href : `https://lapremiere.com/cines/detalles/${cinemaId}`;
+
     return (
         <>
+            <SEO
+                title={cinemaName}
+                description={cinemaDescription}
+                keywords={`${cinemaName}, cine, ${cinema?.address?.city || ''}, cartelera, películas`}
+                image={cinemaImage}
+                url={cinemaUrl}
+                type="business.business"
+                cinema={cinema}
+            />
             <div className="CinemaDetailsPage">
 
                         <Container>

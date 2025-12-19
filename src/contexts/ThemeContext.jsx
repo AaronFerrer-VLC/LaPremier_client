@@ -4,6 +4,7 @@
  */
 
 import { createContext, useContext, useState, useEffect } from 'react'
+import { safeGetItem, safeSetItem } from '../utils/storage'
 
 const ThemeContext = createContext()
 
@@ -18,14 +19,13 @@ export const useTheme = () => {
 export const ThemeProvider = ({ children }) => {
     // Leer preferencia guardada o usar dark por defecto
     const [theme, setTheme] = useState(() => {
-        const savedTheme = localStorage.getItem('theme')
-        return savedTheme || 'dark'
+        return safeGetItem('theme', 'dark');
     })
 
     // Aplicar tema al documento
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme)
-        localStorage.setItem('theme', theme)
+        safeSetItem('theme', theme)
     }, [theme])
 
     // Detectar preferencia del sistema
@@ -33,7 +33,7 @@ export const ThemeProvider = ({ children }) => {
         const mediaQuery = window.matchMedia('(prefers-color-scheme: light)')
         const handleChange = (e) => {
             // Solo aplicar si no hay tema guardado
-            if (!localStorage.getItem('theme')) {
+            if (!safeGetItem('theme')) {
                 setTheme(e.matches ? 'light' : 'dark')
             }
         }

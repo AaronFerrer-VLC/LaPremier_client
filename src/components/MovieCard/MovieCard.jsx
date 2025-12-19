@@ -1,5 +1,5 @@
 import PropTypes from "prop-types"
-import { useState } from "react"
+import { memo } from "react"
 import { Link } from "react-router-dom"
 import { Accordion } from "react-bootstrap"
 import FlagIcon from "../FlagIcon/FlagIcon"
@@ -10,35 +10,8 @@ import ShareButton from "../ShareButton/ShareButton"
 import StreamingPlatforms from "../StreamingPlatforms/StreamingPlatforms"
 import { FaClock, FaFlag, FaLanguage, FaCalendarAlt, FaChevronDown, FaPlay } from "react-icons/fa"
 import logger from "../../utils/logger"
+import { getCountryCode } from "../../utils/countryCodes"
 import "../MovieCard/MovieCard.css"
-
-const countryNameToCode = {
-    "Estados Unidos": "US",
-    "United States of America": "US",
-    "España": "ES",
-    "Spain": "ES",
-    "Reino Unido": "GB",
-    "United Kingdom": "GB",
-    "Canada": "CA",
-    "México": "MX",
-    "Mexico": "MX",
-    "Alemania": "DE",
-    "Germany": "DE",
-    "Japón": "JP",
-    "Japan": "JP",
-    "Australia": "AU",
-    "Austria": "AT",
-    "New Zealand": "NZ",
-    "Nueva Zelanda": "NZ",
-    "Finland": "FI",
-    "Finlandia": "FI",          
-    "Francia": "FR",   
-    "France": "FR",
-    "Polonia": "PL",
-    "Poland": "PL",
-    "Italia": "IT",
-    "Italy": "IT", 
-}
 
 const MovieCard = ({ id, tmdbId, movie, title, country, duration, language, calification, poster, date }) => {
     // Support both direct props and movie object
@@ -54,11 +27,17 @@ const MovieCard = ({ id, tmdbId, movie, title, country, duration, language, cali
         date
     };
 
-    const movieId = movieData.id || movieData.tmdbId;
+    // Determine movieId and effectiveTmdbId
+    // If movieData has both id and tmdbId, prefer id for movieId and keep tmdbId separate
+    // If only tmdbId exists, use it for both
+    const movieId = movieData.id || movieData._id || movieData.tmdbId;
+    const effectiveTmdbId = movieData.tmdbId || tmdbId || (movieData.id && /^\d+$/.test(movieData.id.toString()) ? Number(movieData.id) : null);
+    
     const movieTitle = movieData.title?.spanish || movieData.title || 'Película';
     const movieCountry = movieData.country || '';
     const movieDuration = movieData.duration || 0;
-    const movieLanguage = movieData.language || '';
+    // Use displayLanguage if available (ES, V.O., or ES + V.O.), otherwise use language
+    const movieLanguage = movieData.displayLanguage || movieData.language || '';
     const movieCalification = movieData.calification || '';
     const moviePoster = movieData.poster || '';
     const movieDate = movieData.date || '';
@@ -75,7 +54,8 @@ const MovieCard = ({ id, tmdbId, movie, title, country, duration, language, cali
     };
 
     const year = getYear();
-    const countryCode = countryNameToCode[movieCountry] || null;
+    // Use countryCode from movieData if available (from TMDB), otherwise try to get it from country name
+    const countryCode = movieData.countryCode || getCountryCode(movieCountry);
     const posterAlt = `Poster de ${movieTitle}`;
 
     // If no local ID, we'll need to sync from TMDB first
@@ -83,18 +63,18 @@ const MovieCard = ({ id, tmdbId, movie, title, country, duration, language, cali
 
     return (
         <article className="MovieCard" aria-label={`Tarjeta de película: ${movieTitle}`}>
-            <Link 
-                to={linkTo}
-                className="movie-card-link"
-                aria-label={`Ver detalles de ${movieTitle}`}
-                onClick={(e) => {
-                    if (!movieId) {
-                        e.preventDefault();
-                        logger.warn('MovieCard: No valid ID for movie', { title: movieTitle }, 'MovieCard');
-                    }
-                }}
-            >
-                <Card variant="elevated" hover className="movie-card h-100">
+            <Card variant="elevated" hover className="movie-card h-100">
+                <Link 
+                    to={linkTo}
+                    className="movie-card-link"
+                    aria-label={`Ver detalles de ${movieTitle}`}
+                    onClick={(e) => {
+                        if (!movieId) {
+                            e.preventDefault();
+                            logger.warn('MovieCard: No valid ID for movie', { title: movieTitle }, 'MovieCard');
+                        }
+                    }}
+                >
                     <div className="movie-poster-container">
                         <LazyImage
                             src={moviePoster}
@@ -109,7 +89,12 @@ const MovieCard = ({ id, tmdbId, movie, title, country, duration, language, cali
                             )}
                             <div className="movie-poster-actions">
                                 <div className="movie-favorite-button">
-                                    <FavoriteButton movieId={movieId} type="favorite" size="sm" />
+                                    <FavoriteButton 
+                                        movieId={movieId} 
+                                        tmdbId={effectiveTmdbId}
+                                        type="favorite" 
+                                        size="sm" 
+                                    />
                                 </div>
                                 <div className="movie-share-button">
                                     <ShareButton 
@@ -141,7 +126,7 @@ const MovieCard = ({ id, tmdbId, movie, title, country, duration, language, cali
                             )}
                         </div>
                         <div className="movie-info">
-                            {movieCountry && (
+                            {movieCountry && movieCountry !== 'Desconocido' && (
                                 <div className="movie-info-item">
                                     <FaFlag className="info-icon" />
                                     {countryCode ? (
@@ -163,33 +148,33 @@ const MovieCard = ({ id, tmdbId, movie, title, country, duration, language, cali
                                 </div>
                             )}
                         </div>
-                        {movieData.watchProviders && (
-                            <div className="movie-streaming-platforms">
-                                <Accordion defaultActiveKey="" className="streaming-accordion">
-                                    <Accordion.Item eventKey="streaming" className="border-0">
-                                        <Accordion.Header className="streaming-accordion-header">
-                                            <span className="streaming-toggle-text">
-                                                <FaPlay className="me-2" />
-                                                Ver en streaming
-                                                <span className="ms-2">
-                                                    <FaChevronDown className="accordion-icon" />
-                                                </span>
-                                            </span>
-                                        </Accordion.Header>
-                                        <Accordion.Body className="streaming-accordion-body">
-                                            <StreamingPlatforms 
-                                                watchProviders={movieData.watchProviders} 
-                                                showLabel={false}
-                                                movieTitle={movieTitle}
-                                            />
-                                        </Accordion.Body>
-                                    </Accordion.Item>
-                                </Accordion>
-                            </div>
-                        )}
                     </Card.Body>
-                </Card>
-            </Link>
+                </Link>
+                {movieData.watchProviders && (
+                    <div className="movie-streaming-platforms">
+                        <Accordion defaultActiveKey="" className="streaming-accordion">
+                            <Accordion.Item eventKey="streaming" className="border-0">
+                                <Accordion.Header className="streaming-accordion-header">
+                                    <span className="streaming-toggle-text">
+                                        <FaPlay className="me-2" />
+                                        Ver en streaming
+                                        <span className="ms-2">
+                                            <FaChevronDown className="accordion-icon" />
+                                        </span>
+                                    </span>
+                                </Accordion.Header>
+                                <Accordion.Body className="streaming-accordion-body">
+                                    <StreamingPlatforms 
+                                        watchProviders={movieData.watchProviders} 
+                                        showLabel={false}
+                                        movieTitle={movieTitle}
+                                    />
+                                </Accordion.Body>
+                            </Accordion.Item>
+                        </Accordion>
+                    </div>
+                )}
+            </Card>
         </article>
     )
 }
@@ -213,4 +198,22 @@ MovieCard.propTypes = {
     date: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)])
 }
 
-export default MovieCard
+// Memoize component to prevent unnecessary re-renders
+export default memo(MovieCard, (prevProps, nextProps) => {
+  // Custom comparison function for better performance
+  const prevId = prevProps.id || prevProps.tmdbId || prevProps.movie?.id || prevProps.movie?.tmdbId;
+  const nextId = nextProps.id || nextProps.tmdbId || nextProps.movie?.id || nextProps.movie?.tmdbId;
+  
+  // If IDs are different, re-render
+  if (prevId !== nextId) return false;
+  
+  // Compare other important props
+  const prevTitle = prevProps.title?.spanish || prevProps.title || prevProps.movie?.title?.spanish || prevProps.movie?.title;
+  const nextTitle = nextProps.title?.spanish || nextProps.title || nextProps.movie?.title?.spanish || nextProps.movie?.title;
+  
+  if (prevTitle !== nextTitle) return false;
+  if (prevProps.poster !== nextProps.poster && prevProps.movie?.poster !== nextProps.movie?.poster) return false;
+  
+  // If all important props are the same, skip re-render
+  return true;
+});

@@ -1,88 +1,58 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
-import tmdbService from '../../services/tmdb.service';
-import { moviesService } from '../../services/movies.service';
 import MovieCard from '../MovieCard/MovieCard';
-import { SkeletonCardList } from '../SkeletonLoader/SkeletonLoader';
-import { Alert } from '../UI';
 import { ENV } from '../../config/env';
 import logger from '../../utils/logger';
 import './MovieCollection.css';
 
-const MovieCollection = ({ collectionId, collectionName }) => {
-  const [collection, setCollection] = useState(null);
-  const [movies, setMovies] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+/**
+ * MovieCollection Component
+ * Displays movies from a collection/saga
+ * Note: Collection endpoint is not available through proxy backend.
+ * The belongs_to_collection field in movie details only contains basic info (id, name),
+ * not the full collection with all movies. This component will only render if
+ * collectionData with parts is provided, otherwise it returns null silently.
+ */
+const MovieCollection = ({ collectionId, collectionName, collectionData }) => {
+  // Transform movies from collection data if provided
+  const movies = useMemo(() => {
+    if (!collectionData?.parts || !Array.isArray(collectionData.parts)) {
+      return [];
+    }
 
-  useEffect(() => {
-    const loadCollection = async () => {
-      if (!collectionId || !ENV.HAS_TMDB) {
-        setLoading(false);
-        return;
-      }
-
+    return collectionData.parts.map(movie => {
       try {
-        setLoading(true);
-        setError(null);
-        
-        // Get collection details
-        const collectionData = await tmdbService.getCollection(collectionId);
-        setCollection(collectionData);
-        
-        // Transform movies from collection
-        const transformedMovies = (collectionData.parts || []).map(movie => {
-          try {
-            return {
-              tmdbId: movie.id,
-              id: movie.id,
-              _id: movie.id,
-              title: {
-                original: movie.original_title || '',
-                spanish: movie.title || movie.original_title || ''
-              },
-              poster: movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : null,
-              backdrop: movie.backdrop_path ? `https://image.tmdb.org/t/p/original${movie.backdrop_path}` : null,
-              country: movie.original_language || 'Desconocido',
-              language: movie.original_language || 'en',
-              date: movie.release_date || '',
-              calification: movie.release_date ? movie.release_date.split('-')[0] : '',
-              description: movie.overview || '',
-              rating: movie.vote_average || 0,
-            };
-          } catch (err) {
-            logger.warn('Failed to transform collection movie', { movieId: movie.id, error: err }, 'MovieCollection');
-            return null;
-          }
-        }).filter(Boolean);
-        
-        setMovies(transformedMovies);
-        logger.info('Collection loaded', { collectionId, name: collectionData.name, count: transformedMovies.length }, 'MovieCollection');
+        return {
+          tmdbId: movie.id,
+          id: movie.id,
+          _id: movie.id,
+          title: {
+            original: movie.original_title || '',
+            spanish: movie.title || movie.original_title || ''
+          },
+          poster: movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : null,
+          backdrop: movie.backdrop_path ? `https://image.tmdb.org/t/p/original${movie.backdrop_path}` : null,
+          country: movie.original_language || 'Desconocido',
+          language: movie.original_language || 'en',
+          date: movie.release_date || '',
+          calification: movie.release_date ? movie.release_date.split('-')[0] : '',
+          description: movie.overview || '',
+          rating: movie.vote_average || 0,
+        };
       } catch (err) {
-        logger.error('Failed to load collection', err, 'MovieCollection');
-        setError('No se pudo cargar la colección');
-      } finally {
-        setLoading(false);
+        logger.warn('Failed to transform collection movie', { movieId: movie.id, error: err }, 'MovieCollection');
+        return null;
       }
-    };
+    }).filter(Boolean);
+  }, [collectionData]);
 
-    loadCollection();
-  }, [collectionId]);
+  // Use collection data if provided
+  const collection = collectionData || null;
 
-  if (!collectionId || !ENV.HAS_TMDB) {
-    return null;
-  }
-
-  if (loading) {
-    return (
-      <Container className="MovieCollection py-4">
-        <SkeletonCardList count={4} />
-      </Container>
-    );
-  }
-
-  if (error || !collection || movies.length === 0) {
+  // Don't render if no collection data with movies or if TMDB is disabled
+  // Note: belongs_to_collection from TMDB only has id/name, not the full collection with parts
+  // So this component will only render if collectionData with parts is explicitly provided
+  if (!ENV.HAS_TMDB || !collection || !collection.parts || movies.length === 0) {
     return null;
   }
 

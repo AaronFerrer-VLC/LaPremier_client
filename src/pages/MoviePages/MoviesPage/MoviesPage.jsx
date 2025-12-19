@@ -4,7 +4,6 @@ import { Button } from "../../../components/UI"
 import MoviesList from "../../../components/MoviesList/MoviesList"
 import MovieSearch from "../../../components/MovieSearch/MovieSearch"
 import { useState, useEffect } from "react"
-import FiltersMovies from "../../../components/FiltersMovies/FiltersMovies"
 import locationService from "../../../services/location.service"
 import logger from "../../../utils/logger"
 import { ENV } from "../../../config/env"
@@ -12,7 +11,6 @@ import "./MoviesPage.css"
 
 
 const MoviesPage = () => {
-    const [filterData, setFilterData] = useState()
     const [userCity, setUserCity] = useState(null)
     const [searchQuery, setSearchQuery] = useState('')
 
@@ -30,13 +28,8 @@ const MoviesPage = () => {
         loadUserCity();
     }, []);
 
-    const handleFilterData = (filter) => {
-        setFilterData(filter)
-    }
-
     const handleSearch = (query) => {
         setSearchQuery(query)
-        setFilterData(null) // Clear filters when searching
     }
     
     return (
@@ -60,13 +53,10 @@ const MoviesPage = () => {
                                 </Col>
                             </Row>
                         )}
-                        
-                        {/* Filters - Only show if not searching */}
-                        {!searchQuery && <FiltersMovies handleFilterData={handleFilterData} />}
                     </Col>
                 </Row>
                 <Row>
-                    <MoviesList filterData={filterData} searchQuery={searchQuery} city={userCity} />
+                    <MoviesList searchQuery={searchQuery} city={userCity} />
                 </Row>
                 <Button variant="secondary" as={Link} to={'/'} className="mt-4">Volver a la Home</Button>
             </Container>

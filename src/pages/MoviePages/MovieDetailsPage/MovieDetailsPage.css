@@ -137,16 +137,18 @@
     cursor: pointer;
     border-radius: 12px;
     z-index: 3;
-    pointer-events: auto;
+    pointer-events: none; /* Don't block clicks when invisible */
 }
 
 .movie-poster-container:hover .trailer-overlay {
     opacity: 1;
+    pointer-events: auto; /* Enable clicks when visible */
 }
 
 .trailer-overlay:hover {
     background: rgba(0, 0, 0, 0.85);
     opacity: 1;
+    pointer-events: auto;
 }
 
 .trailer-overlay svg {
@@ -165,7 +167,13 @@
     position: absolute;
     top: 12px;
     right: 12px;
-    z-index: 10;
+    z-index: 15; /* Higher than trailer-overlay to ensure it's on top */
+    pointer-events: none; /* Allow clicks to pass through to button */
+}
+
+.favorite-button-overlay > * {
+    pointer-events: auto !important; /* Re-enable clicks on button itself */
+    cursor: pointer !important;
 }
 
 /* Streaming Platforms Section */

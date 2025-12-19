@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
 import { FaTh, FaList } from 'react-icons/fa';
 import { Button } from '../UI';
+import { safeGetItem, safeSetItem } from '../../utils/storage';
 import './ViewToggle.css';
 
 const ViewToggle = ({ onViewChange, defaultView = 'grid' }) => {
   const [view, setView] = useState(() => {
-    const saved = localStorage.getItem('lapremier_view_preference');
-    return saved || defaultView;
+    return safeGetItem('view_preference', defaultView);
   });
 
   useEffect(() => {
-    localStorage.setItem('lapremier_view_preference', view);
+    safeSetItem('view_preference', view);
     if (onViewChange) {
       onViewChange(view);
     }

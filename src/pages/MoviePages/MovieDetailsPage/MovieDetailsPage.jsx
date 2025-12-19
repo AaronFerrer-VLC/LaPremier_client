@@ -8,10 +8,9 @@ import FlagIcon from "../../../components/FlagIcon/FlagIcon"
 import EditReviewForm from "../../../components/EditReviewForm/EditReviewForm"
 import FavoriteButton from "../../../components/FavoriteButton/FavoriteButton"
 import { AuthContext } from "../../../contexts/auth.context"
-import { moviesService } from "../../../services/movies.service"
-import { cinemasService } from "../../../services/cinemas.service"
-import { reviewsService } from "../../../services/reviews.service"
-import { useApi } from "../../../hooks/useApi"
+import { useMovie, useSoftDeleteMovie } from "../../../hooks/useMovies"
+import { useCinemas, useUpdateCinema } from "../../../hooks/useCinemas"
+import { useReviews, useCreateReview, useUpdateReview } from "../../../hooks/useReviews"
 import { notifySuccess, notifyError } from "../../../utils/notifications"
 import logger from "../../../utils/logger"
 import { SkeletonDetails } from "../../../components/SkeletonLoader/SkeletonLoader"
@@ -24,62 +23,10 @@ import CitySelector from "../../../components/CitySelector/CitySelector"
 import MovieCollection from "../../../components/MovieCollection/MovieCollection"
 import { ENV } from "../../../config/env"
 import locationService from "../../../services/location.service"
+import SEO from "../../../components/SEO/SEO"
 import "../MovieDetailsPage/MovieDetailsPage.css"
 
-const countryNameToCode = {
-    // Spanish names
-    "Estados Unidos": "US",
-    "España": "ES",
-    "Inglaterra": "IN",
-    "Reino Unido": "GB",
-    "Canada": "CA",
-    "México": "MX",
-    "Alemania": "DE",
-    "Japón": "JP",
-    "Nueva Zelanda": "NZ",
-    "Australia": "AU",
-    // English names (from TMDB)
-    "United States of America": "US",
-    "United States": "US",
-    "Spain": "ES",
-    "England": "GB",
-    "United Kingdom": "GB",
-    "Canada": "CA",
-    "Mexico": "MX",
-    "Germany": "DE",
-    "Japan": "JP",
-    "New Zealand": "NZ",
-    "Australia": "AU",
-    "France": "FR",
-    "Italy": "IT",
-    "Brazil": "BR",
-    "Argentina": "AR",
-    "Chile": "CL",
-    "Colombia": "CO",
-    "Peru": "PE",
-    "Venezuela": "VE",
-    "China": "CN",
-    "India": "IN",
-    "South Korea": "KR",
-    "Russia": "RU",
-    "Poland": "PL",
-    "Netherlands": "NL",
-    "Belgium": "BE",
-    "Switzerland": "CH",
-    "Austria": "AT",
-    "Sweden": "SE",
-    "Norway": "NO",
-    "Denmark": "DK",
-    "Finland": "FI",
-    "Ireland": "IE",
-    "Portugal": "PT",
-    "Greece": "GR",
-    "Turkey": "TR",
-    "Egypt": "EG",
-    "South Africa": "ZA",
-    "Desconocido": "ZZ",
-    "Unknown": "ZZ"
-}
+import { getCountryCode } from "../../../utils/countryCodes"
 
 const MovieDetailsPage = () => {
     const { loggedUser } = useContext(AuthContext)
@@ -128,57 +75,27 @@ const MovieDetailsPage = () => {
         return /^\d+$/.test(movieId);
     }, [movieId]);
 
-    // Fetch movie details - try TMDB first if numeric ID, otherwise MongoDB
-    const { data: movie, loading: isLoadingMovie, error: movieError } = useApi(
-        async () => {
-            // If it's a numeric ID (TMDB), try TMDB first if enabled
-            if (isTMDBId && ENV.HAS_TMDB) {
-                try {
-                    const tmdbMovie = await moviesService.getFromTMDB(Number(movieId));
-                    logger.info('Movie loaded from TMDB', { 
-                        movieId, 
-                        tmdbId: Number(movieId),
-                        poster: tmdbMovie?.poster,
-                        hasPoster: !!tmdbMovie?.poster,
-                        posterType: typeof tmdbMovie?.poster
-                    }, 'MovieDetailsPage');
-                    return { data: tmdbMovie };
-                } catch (tmdbError) {
-                    logger.warn('Failed to get movie from TMDB, trying MongoDB', tmdbError, 'MovieDetailsPage');
-                }
-            }
-            
-            // Try MongoDB (either as primary source or fallback)
-            try {
-                const response = await moviesService.getById(movieId);
-                logger.info('Movie loaded from MongoDB', { 
-                    movieId,
-                    poster: response?.data?.poster,
-                    hasPoster: !!response?.data?.poster
-                }, 'MovieDetailsPage');
-                return response;
-            } catch (error) {
-                throw error;
-            }
-        },
-        [movieId, isTMDBId]
-    )
+    // Fetch movie details using React Query (handles TMDB and MongoDB)
+    const { data: movie, isLoading: isLoadingMovie, error: movieError } = useMovie(movieId, {
+        enableTMDB: ENV.HAS_TMDB,
+    });
 
-    // Fetch all cinemas
-    const { data: allCinemas, loading: isLoadingCinemas } = useApi(
-        () => cinemasService.getAll(),
-        []
-    )
+    // Fetch all cinemas using React Query
+    const { data: allCinemas = [], isLoading: isLoadingCinemas } = useCinemas();
 
-    // Fetch reviews for this movie
-    const { data: reviewsData, loading: isLoadingReviews, refetch: refetchReviews } = useApi(
-        () => reviewsService.getByMovieId(movieId),
-        [movieId]
-    )
+    // Fetch reviews for this movie using React Query
+    const { data: reviews = [], isLoading: isLoadingReviews } = useReviews(movieId);
 
-    const reviews = reviewsData || []
     const displayReviews = filteredReviews.length > 0 ? filteredReviews : reviews
     const isLoading = isLoadingMovie || isLoadingCinemas || isLoadingReviews
+
+    // Mutations for reviews
+    const createReviewMutation = useCreateReview();
+    const updateReviewMutation = useUpdateReview();
+    
+    // Mutations for movie and cinemas
+    const softDeleteMovieMutation = useSoftDeleteMovie();
+    const updateCinemaMutation = useUpdateCinema();
 
     // Check if movie is from TMDB (streaming) or local (in theaters)
     const isTMDBMovie = useMemo(() => {
@@ -276,27 +193,7 @@ const MovieDetailsPage = () => {
 
     // Calculate country code - handle both Spanish and English country names
     const countryCode = useMemo(() => {
-        if (!movie?.country) return 'ZZ';
-        
-        // Try exact match first
-        if (countryNameToCode[movie.country]) {
-            return countryNameToCode[movie.country];
-        }
-        
-        // Try case-insensitive match
-        const countryLower = movie.country.toLowerCase();
-        for (const [key, code] of Object.entries(countryNameToCode)) {
-            if (key.toLowerCase() === countryLower) {
-                return code;
-            }
-        }
-        
-        // If country is a 2-letter code, use it directly
-        if (movie.country.length === 2 && /^[A-Z]{2}$/i.test(movie.country)) {
-            return movie.country.toUpperCase();
-        }
-        
-        return 'ZZ';
+        return getCountryCode(movie?.country);
     }, [movie?.country])
     
     // Check if movie is available in Spanish
@@ -335,26 +232,28 @@ const MovieDetailsPage = () => {
 
     const handleMovieDelete = async () => {
         try {
-            const cinemasResponse = await cinemasService.getAll()
-            const allCinemasData = cinemasResponse.data
-
-            const cinemasToUpdate = allCinemasData.filter(eachCinema =>
+            // Get all cinemas that reference this movie
+            const cinemasToUpdate = allCinemas.filter(eachCinema =>
                 movie?.cinemaId?.includes(eachCinema.id)
             )
 
+            // Update each cinema to remove movie reference
             const updatePromises = cinemasToUpdate.map(eachCinema => {
                 const newMoviesIds = Array.isArray(eachCinema.movieId)
-                    ? eachCinema.movieId.filter(id => id !== movie?.id)
-                    : eachCinema.movieId === movie?.id ? [] : eachCinema.movieId
+                    ? eachCinema.movieId.filter(id => id !== movie?.id && id !== movie?.tmdbId)
+                    : eachCinema.movieId === movie?.id || eachCinema.movieId === movie?.tmdbId ? [] : eachCinema.movieId
 
-                return cinemasService.update(eachCinema.id, {
-                    ...eachCinema,
-                    movieId: newMoviesIds
+                return updateCinemaMutation.mutateAsync({
+                    id: eachCinema.id,
+                    data: {
+                        ...eachCinema,
+                        movieId: newMoviesIds
+                    }
                 })
             })
 
             await Promise.all(updatePromises)
-            await moviesService.softDelete(movieId)
+            await softDeleteMovieMutation.mutateAsync(movieId)
 
             notifySuccess('Película eliminada correctamente')
             setShowDeleteModal(false)
@@ -373,13 +272,11 @@ const MovieDetailsPage = () => {
                 user: newReview.user || "Anónimo"
             }
 
-            await reviewsService.create(reviewWithMovieId)
-            notifySuccess('Reseña añadida correctamente')
-            refetchReviews()
+            await createReviewMutation.mutateAsync(reviewWithMovieId)
             setShowAddReviewModal(false)
         } catch (error) {
+            // Error handling is done in the mutation
             logger.error('Failed to add review', error, 'MovieDetailsPage')
-            notifyError('Error al añadir la reseña')
         }
     }
 
@@ -393,6 +290,7 @@ const MovieDetailsPage = () => {
             let reviewId, dataToUpdate
             if (typeof reviewDataOrId === 'object' && reviewDataOrId.id) {
                 reviewId = reviewDataOrId.id
+                // eslint-disable-next-line no-unused-vars
                 const { id, ...rest } = reviewDataOrId
                 dataToUpdate = rest
             } else {
@@ -400,14 +298,11 @@ const MovieDetailsPage = () => {
                 dataToUpdate = updatedData
             }
             
-            await reviewsService.update(reviewId, dataToUpdate)
-            notifySuccess('Reseña actualizada correctamente')
-            logger.info('Review updated successfully', { reviewId: reviewId }, 'MovieDetailsPage')
-            refetchReviews()
+            await updateReviewMutation.mutateAsync({ id: reviewId, data: dataToUpdate })
             setShowEditReviewModal(false)
         } catch (error) {
+            // Error handling is done in the mutation
             logger.error('Failed to update review', error, 'MovieDetailsPage')
-            notifyError('Error al actualizar la reseña')
         }
     }
 
@@ -443,8 +338,22 @@ const MovieDetailsPage = () => {
         )
     }
 
+    // movieTitle is already defined above with useMemo
+    const movieDescription = movie?.overview || `Descubre toda la información sobre ${movieTitle}. Cartelera, cines donde verla, reseñas y más.`;
+    const movieImage = movie?.poster || movie?.backdrop || 'https://res.cloudinary.com/dhluctrie/image/upload/v1731516947/favicon.png';
+    const movieUrl = typeof window !== 'undefined' ? window.location.href : `https://lapremiere.com/peliculas/detalles/${movieId}`;
+
     return (
         <div className="MovieDetailsPage">
+            <SEO
+                title={movieTitle}
+                description={movieDescription}
+                keywords={`${movieTitle}, película, cine, cartelera, estrenos, ${movie?.gender?.join(', ') || ''}`}
+                image={movieImage}
+                url={movieUrl}
+                type="video.movie"
+                movie={movie}
+            />
             <Container>
                 {/* HEADER WITH NAVIGATION */}
                 <Row className="mt-4 mb-3">
@@ -621,9 +530,12 @@ const MovieDetailsPage = () => {
                                             <div 
                                                 className="trailer-overlay"
                                                 onClick={(e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
+                                                    // Don't prevent default or stop propagation - let it work naturally
                                                     window.open(finalTrailerUrl, "_blank", "noopener,noreferrer");
+                                                }}
+                                                onMouseDown={(e) => {
+                                                    // Only stop propagation on mouse down to prevent conflicts
+                                                    e.stopPropagation();
                                                 }}
                                                 title="Ver trailer en YouTube"
                                             >
@@ -634,10 +546,20 @@ const MovieDetailsPage = () => {
                                     }
                                     return null;
                                 })()}
-                                <div className="favorite-button-overlay">
+                                <div 
+                                    className="favorite-button-overlay"
+                                    onMouseDown={(e) => {
+                                        // Ensure clicks on favorite button work
+                                        e.stopPropagation();
+                                    }}
+                                    onClick={(e) => {
+                                        // Ensure clicks on favorite button work
+                                        e.stopPropagation();
+                                    }}
+                                >
                                     <FavoriteButton 
-                                        movieId={movieId} 
-                                        tmdbId={movie?.tmdbId || (isTMDBId ? Number(movieId) : null)}
+                                        movieId={movie?.id || movie?._id || movieId} 
+                                        tmdbId={movie?.tmdbId || (isTMDBId && movieId ? Number(movieId) : null)}
                                         type="favorite" 
                                         size="lg"
                                     />
@@ -952,10 +874,14 @@ const MovieDetailsPage = () => {
                 </Row>
 
                 {/* MOVIE COLLECTION */}
+                {/* Note: Collection endpoint not available through proxy.
+                    belongs_to_collection only contains basic info (id, name),
+                    not the full collection with all movies. Component will return null. */}
                 {movie?.collection?.id && (
                     <MovieCollection 
                         collectionId={movie.collection.id} 
                         collectionName={movie.collection.name}
+                        collectionData={null}
                     />
                 )}
 

@@ -177,9 +177,10 @@
 }
 
 .movie-streaming-platforms {
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
+    margin-top: 0;
+    padding: 0.75rem 1.25rem;
     border-top: 1px solid var(--border-color-light);
+    background-color: var(--bg-secondary);
 }
 
 .streaming-accordion {

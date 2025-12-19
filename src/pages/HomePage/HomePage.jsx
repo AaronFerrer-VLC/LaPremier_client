@@ -5,41 +5,54 @@ import CitySelector from "../../components/CitySelector/CitySelector";
 import { useState, useMemo, useEffect } from "react";
 import { Container, Col, Row } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
-import { moviesService } from "../../services/movies.service"
-import { cinemasService } from "../../services/cinemas.service"
 import locationService from "../../services/location.service"
-import { useApi } from "../../hooks/useApi"
+import { useMovies, useNowPlayingMovies, useTrendingMovies, usePopularMovies, useUpcomingMovies } from "../../hooks/useMovies"
+import { useCinemas } from "../../hooks/useCinemas"
 import { SkeletonCardList } from "../../components/SkeletonLoader/SkeletonLoader"
 import { Button, Card } from "../../components/UI"
 import MovieCard from "../../components/MovieCard/MovieCard"
-import { FaFilm, FaTheaterMasks, FaStar, FaArrowRight, FaFire, FaTrophy, FaCalendarAlt } from "react-icons/fa"
+import { FaFilm, FaTheaterMasks, FaStar, FaArrowRight } from "react-icons/fa"
 import { ENV } from "../../config/env"
 import logger from "../../utils/logger"
+import SEO from "../../components/SEO/SEO"
 
 const HomePage = () => {
     const [filterSelected, setFilterSelected] = useState("")
     const [videoLoaded, setVideoLoaded] = useState(false)
     const [userCity, setUserCity] = useState(null)
-    const [nowPlayingMovies, setNowPlayingMovies] = useState([])
-    const [loadingNowPlaying, setLoadingNowPlaying] = useState(false)
-    const [trendingMovies, setTrendingMovies] = useState([])
-    const [loadingTrending, setLoadingTrending] = useState(false)
-    const [popularMovies, setPopularMovies] = useState([])
-    const [loadingPopular, setLoadingPopular] = useState(false)
-    const [upcomingMovies, setUpcomingMovies] = useState([])
-    const [loadingUpcoming, setLoadingUpcoming] = useState(false)
     const [activeTab, setActiveTab] = useState('nowPlaying')
 
-    // Fetch data for featured content
-    const { data: movies, loading: loadingMovies } = useApi(
-        () => moviesService.getAll(),
-        []
-    )
+    // Fetch data using React Query (cached)
+    const { data: movies, isLoading: loadingMovies } = useMovies({
+        enabled: true,
+    });
 
-    const { data: cinemas, loading: loadingCinemas } = useApi(
-        () => cinemasService.getAll(),
-        []
-    )
+    const { data: cinemas, isLoading: loadingCinemas } = useCinemas({
+        enabled: true,
+    });
+
+    // Fetch TMDB movies using React Query
+    const { data: nowPlayingData = [], isLoading: loadingNowPlaying } = useNowPlayingMovies(1, {
+        enabled: ENV.HAS_TMDB && !!userCity,
+    });
+
+    const { data: trendingData = [], isLoading: loadingTrending } = useTrendingMovies('day', 1, {
+        enabled: ENV.HAS_TMDB && !!userCity,
+    });
+
+    const { data: popularData = [], isLoading: loadingPopular } = usePopularMovies(1, {
+        enabled: ENV.HAS_TMDB && !!userCity,
+    });
+
+    const { data: upcomingData = [], isLoading: loadingUpcoming } = useUpcomingMovies(1, {
+        enabled: ENV.HAS_TMDB && !!userCity,
+    });
+
+    // Extract movies from React Query responses
+    const nowPlayingMovies = Array.isArray(nowPlayingData) ? nowPlayingData.slice(0, 6) : [];
+    const trendingMovies = Array.isArray(trendingData) ? trendingData.slice(0, 6) : [];
+    const popularMovies = Array.isArray(popularData) ? popularData.slice(0, 6) : [];
+    const upcomingMovies = Array.isArray(upcomingData) ? upcomingData.slice(0, 6) : [];
 
     // Load user city on mount
     useEffect(() => {
@@ -54,43 +67,6 @@ const HomePage = () => {
         };
         loadUserCity();
     }, []);
-
-    // Fetch movies from TMDB
-    useEffect(() => {
-        const fetchMovies = async () => {
-            if (!ENV.HAS_TMDB) return;
-
-            try {
-                // Fetch all categories in parallel
-                const [nowPlaying, trending, popular, upcoming] = await Promise.all([
-                    moviesService.getNowPlayingFromTMDB(1).catch(() => []),
-                    moviesService.getTrendingFromTMDB('day', 1).catch(() => []),
-                    moviesService.getPopularFromTMDB(1).catch(() => []),
-                    moviesService.getUpcomingFromTMDB(1).catch(() => []),
-                ]);
-
-                setNowPlayingMovies(nowPlaying.slice(0, 6));
-                setTrendingMovies(trending.slice(0, 6));
-                setPopularMovies(popular.slice(0, 6));
-                setUpcomingMovies(upcoming.slice(0, 6));
-            } catch (error) {
-                logger.error('Failed to fetch movies from TMDB', error, 'HomePage');
-            } finally {
-                setLoadingNowPlaying(false);
-                setLoadingTrending(false);
-                setLoadingPopular(false);
-                setLoadingUpcoming(false);
-            }
-        };
-
-        if (userCity) {
-            setLoadingNowPlaying(true);
-            setLoadingTrending(true);
-            setLoadingPopular(true);
-            setLoadingUpcoming(true);
-            fetchMovies();
-        }
-    }, [userCity]);
 
     const handleFilterSelected = filter => {
         setFilterSelected(filter)
@@ -138,6 +114,11 @@ const HomePage = () => {
 
     return (
         <main className="HomePage" role="main">
+            <SEO
+                title="LA PREMIERE - Encuentra tu peli favorita, en tu cine favorito"
+                description="Descubre las mejores películas y cines. Busca tu película favorita y encuentra el cine perfecto para disfrutarla. Cartelera actualizada, estrenos, y toda la información que necesitas."
+                keywords="cine, películas, cartelera, cines Madrid, estrenos, películas en cines, LA PREMIERE, buscar películas, cines cerca"
+            />
             {/* Hero Section */}
             <section className="hero-section position-relative" aria-label="Sección principal">
                 <video 

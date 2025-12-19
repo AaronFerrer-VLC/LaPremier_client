@@ -6,12 +6,13 @@ import ViewToggle from "../ViewToggle/ViewToggle"
 import "./MoviesList.css"
 import { SkeletonCardList } from "../SkeletonLoader/SkeletonLoader"
 import { moviesService } from "../../services/movies.service"
+import { transformTMDBMovie } from "../../services/tmdb.service"
 import { logError, formatErrorMessage } from "../../utils/errorHandler"
 import { Alert, Button } from "../UI"
 import { ENV } from "../../config/env"
 import logger from "../../utils/logger"
 
-const MoviesList = ({ filterData, searchQuery = '', city = null }) => {
+const MoviesList = ({ searchQuery = '', city = null }) => {
     const [isLoading, setIsLoading] = useState(true)
     const [movies, setMovies] = useState([])
     const [error, setError] = useState(null)
@@ -19,7 +20,7 @@ const MoviesList = ({ filterData, searchQuery = '', city = null }) => {
 
     useEffect(() => {
         fetchMovies()
-    }, [searchQuery, filterData]) // Re-fetch when search query or filters change
+    }, [searchQuery]) // Re-fetch when search query changes
 
     const fetchMovies = async () => {
         try {
@@ -31,30 +32,64 @@ const MoviesList = ({ filterData, searchQuery = '', city = null }) => {
             if (searchQuery) {
                 // Search movies from TMDB
                 const tmdbSearchData = await moviesService.searchTMDB(searchQuery, 1)
-                fetchedMovies = (tmdbSearchData.results || []).map(movie => ({
-                    ...movie,
-                    id: movie.id, // Use TMDB's ID as the primary ID
-                    tmdbId: movie.id,
-                    title: {
-                        original: movie.original_title,
-                        spanish: movie.title
-                    },
-                    poster: `https://image.tmdb.org/t/p/w500${movie.poster_path}`,
-                    backdrop: `https://image.tmdb.org/t/p/original${movie.backdrop_path}`,
-                    overview: movie.overview,
-                    release_date: movie.release_date,
-                    vote_average: movie.vote_average,
-                    vote_count: movie.vote_count,
-                    country: movie.production_countries?.[0]?.iso_3166_1 || '',
-                    language: movie.original_language,
-                    calification: movie.release_date ? movie.release_date.split('-')[0] : '',
-                    duration: null,
-                    gender: movie.genre_ids,
-                }))
+                fetchedMovies = (tmdbSearchData.results || []).map(movie => {
+                    try {
+                        // Transform using the same function used for now playing
+                        // Note: search results don't have full details, so we create a minimal object
+                        const transformed = transformTMDBMovie({
+                            ...movie,
+                            credits: {},
+                            videos: {},
+                            watchProviders: {},
+                            genres: movie.genre_ids ? [] : (movie.genres || []), // Search results have genre_ids, not genres
+                        })
+                        return {
+                            ...transformed,
+                            id: transformed.tmdbId,
+                            _id: transformed.tmdbId,
+                        }
+                    } catch (error) {
+                        logger.warn('Failed to transform search result', { tmdbId: movie.id, error }, 'MoviesList')
+                        // Fallback to basic transformation
+                        const originalTitle = movie.original_title || '';
+                        const spanishTitle = movie.title || '';
+                        const originalLang = movie.original_language || 'en';
+                        const isOriginalSpanish = originalLang === 'es' || originalLang === 'es-ES';
+                        const hasSpanishTranslation = spanishTitle && spanishTitle !== originalTitle && !isOriginalSpanish;
+                        
+                        let displayLanguage;
+                        if (isOriginalSpanish && hasSpanishTranslation) {
+                            displayLanguage = 'ES + V.O.';
+                        } else if (isOriginalSpanish) {
+                            displayLanguage = 'ES';
+                        } else if (hasSpanishTranslation) {
+                            displayLanguage = 'ES + V.O.';
+                        } else {
+                            displayLanguage = 'V.O.';
+                        }
+                        
+                        return {
+                            id: movie.id,
+                            tmdbId: movie.id,
+                            title: {
+                                original: originalTitle,
+                                spanish: spanishTitle || originalTitle
+                            },
+                            poster: `https://image.tmdb.org/t/p/w500${movie.poster_path}`,
+                            country: movie.production_countries?.[0]?.name || 'Desconocido',
+                            countryCode: movie.production_countries?.[0]?.iso_3166_1 || null,
+                            language: movie.original_language || 'en',
+                            displayLanguage,
+                            calification: movie.release_date ? movie.release_date.split('-')[0] : '',
+                            duration: null,
+                            gender: [],
+                        }
+                    }
+                })
                 logger.info('Movies searched from TMDB', { query: searchQuery, count: fetchedMovies.length }, 'MoviesList')
             } else if (ENV.HAS_TMDB) {
-                // Fetch now playing movies from TMDB by default
-                const tmdbData = await moviesService.getNowPlayingFromTMDB(1)
+                // Fetch all now playing movies from TMDB by default
+                const tmdbData = await moviesService.getAllNowPlayingFromTMDB()
                 fetchedMovies = tmdbData.map(movie => ({
                     ...movie,
                     id: movie.tmdbId, // Use tmdbId as id for routing
@@ -74,17 +109,6 @@ const MoviesList = ({ filterData, searchQuery = '', city = null }) => {
         } finally {
             setIsLoading(false)
         }
-    }
-
-    let filteredMovies = []
-
-    if (filterData) {
-        filteredMovies = movies.filter(eachMovie => {
-            const genderMatch = !filterData.gender || (eachMovie.gender && eachMovie.gender.includes(filterData.gender));
-            const countryMatch = !filterData.country || eachMovie.country === filterData.country;
-            const languageMatch = !filterData.language || eachMovie.language === filterData.language;
-            return genderMatch && countryMatch && languageMatch;
-        });
     }
 
     if (isLoading) {
@@ -108,9 +132,8 @@ const MoviesList = ({ filterData, searchQuery = '', city = null }) => {
         )
     }
 
-    const displayMovies = filterData ? filteredMovies : movies
     // For TMDB movies, we don't filter by isDeleted since they're not in our database
-    const activeMovies = ENV.HAS_TMDB ? displayMovies : displayMovies.filter(movie => !movie.isDeleted)
+    const activeMovies = ENV.HAS_TMDB ? movies : movies.filter(movie => !movie.isDeleted)
 
     if (activeMovies.length === 0) {
         return (

@@ -8,7 +8,7 @@ const Footer = ({ currentFamilyPath }) => {
 
         if (currentFamilyPath) {
             return (
-                <div className="Footer text-center text-primary p-5 mt-5">
+                <footer id="footer" className="Footer text-center text-primary p-5 mt-5" role="contentinfo">
                     <Row>
                         <h2 className="text-primary">LA PREMIERE</h2>
                     </Row>
@@ -27,7 +27,7 @@ const Footer = ({ currentFamilyPath }) => {
                         </Col>
                     </Row>
 
-                </div>
+                </footer>
             )
         }
 }

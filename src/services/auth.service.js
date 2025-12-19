@@ -4,8 +4,8 @@
  */
 
 import apiClient from './api.service';
-import { STORAGE_KEYS } from '../config/constants';
 import logger from '../utils/logger';
+import { safeGetItem, safeSetItem, safeRemoveItem } from '../utils/storage';
 
 export const authService = {
   /**
@@ -16,22 +16,27 @@ export const authService = {
    */
   async login(username, password) {
     try {
+      // Sanitize inputs
+      const sanitizedUsername = typeof username === 'string' ? username.trim() : '';
+      const sanitizedPassword = typeof password === 'string' ? password : '';
+      
+      if (!sanitizedUsername || !sanitizedPassword) {
+        throw new Error('Username and password are required');
+      }
+
       const response = await apiClient.post('/api/auth/login', {
-        username,
-        password
+        username: sanitizedUsername,
+        password: sanitizedPassword
       });
 
       if (response.data.success && response.data.data.token) {
-        // Store token
-        localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.data.data.token);
+        // Store token securely
+        safeSetItem('auth_token', response.data.data.token);
         
-        // Store user data
-        localStorage.setItem(
-          STORAGE_KEYS.AUTH_USER,
-          JSON.stringify(response.data.data.user)
-        );
+        // Store user data securely
+        safeSetItem('auth_user', response.data.data.user);
 
-        logger.info('User logged in successfully', { username }, 'AuthService');
+        logger.info('User logged in successfully', { username: sanitizedUsername }, 'AuthService');
         return response.data.data;
       }
 
@@ -51,23 +56,33 @@ export const authService = {
    */
   async register(username, password, role = 'user') {
     try {
+      // Sanitize inputs
+      const sanitizedUsername = typeof username === 'string' ? username.trim() : '';
+      const sanitizedPassword = typeof password === 'string' ? password : '';
+      const sanitizedRole = typeof role === 'string' ? role.trim() : 'user';
+      
+      if (!sanitizedUsername || !sanitizedPassword) {
+        throw new Error('Username and password are required');
+      }
+
+      // Validate role
+      const validRoles = ['user', 'admin'];
+      const finalRole = validRoles.includes(sanitizedRole) ? sanitizedRole : 'user';
+
       const response = await apiClient.post('/api/auth/register', {
-        username,
-        password,
-        role
+        username: sanitizedUsername,
+        password: sanitizedPassword,
+        role: finalRole
       });
 
       if (response.data.success && response.data.data.token) {
-        // Store token
-        localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.data.data.token);
+        // Store token securely
+        safeSetItem('auth_token', response.data.data.token);
         
-        // Store user data
-        localStorage.setItem(
-          STORAGE_KEYS.AUTH_USER,
-          JSON.stringify(response.data.data.user)
-        );
+        // Store user data securely
+        safeSetItem('auth_user', response.data.data.user);
 
-        logger.info('User registered successfully', { username }, 'AuthService');
+        logger.info('User registered successfully', { username: sanitizedUsername }, 'AuthService');
         return response.data.data;
       }
 
@@ -96,8 +111,8 @@ export const authService = {
    * Logout user
    */
   logout() {
-    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-    localStorage.removeItem(STORAGE_KEYS.AUTH_USER);
+    safeRemoveItem('auth_token');
+    safeRemoveItem('auth_user');
     logger.info('User logged out', {}, 'AuthService');
   },
 
@@ -106,7 +121,7 @@ export const authService = {
    * @returns {boolean}
    */
   isAuthenticated() {
-    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    const token = safeGetItem('auth_token');
     return !!token;
   },
 
@@ -115,7 +130,7 @@ export const authService = {
    * @returns {string|null}
    */
   getToken() {
-    return localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    return safeGetItem('auth_token');
   }
 };
 

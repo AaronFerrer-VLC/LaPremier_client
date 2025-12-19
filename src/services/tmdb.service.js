@@ -62,13 +62,39 @@ export const transformTMDBMovie = (tmdbMovie) => {
   // Get genres
   const gender = (tmdbMovie.genres || []).map((genre) => genre.name);
 
-  // Get production countries
-  const country = tmdbMovie.production_countries?.[0]?.name || 'Desconocido';
+  // Get production countries - only if available (not in basic list results)
+  const country = tmdbMovie.production_countries?.[0]?.name || null;
 
   // Get release year for calification
   const calification = tmdbMovie.release_date
     ? tmdbMovie.release_date.split('-')[0]
     : '';
+
+  // Determine display language: ES + V.O. if both available, ES if only Spanish, V.O. if only original
+  const originalTitle = tmdbMovie.original_title || '';
+  const spanishTitle = tmdbMovie.title || '';
+  const originalLang = tmdbMovie.original_language || 'en';
+  
+  // Check if original language is Spanish
+  const isOriginalSpanish = originalLang === 'es' || originalLang === 'es-ES';
+  // Check if there's a Spanish translation (different title)
+  const hasSpanishTranslation = spanishTitle && spanishTitle !== originalTitle && !isOriginalSpanish;
+  
+  // Determine display language:
+  // - If original is Spanish and there's a translation, show "ES + V.O."
+  // - If original is Spanish, show "ES"
+  // - If there's Spanish translation, show "ES + V.O."
+  // - Otherwise, show "V.O."
+  let displayLanguage;
+  if (isOriginalSpanish && hasSpanishTranslation) {
+    displayLanguage = 'ES + V.O.';
+  } else if (isOriginalSpanish) {
+    displayLanguage = 'ES';
+  } else if (hasSpanishTranslation) {
+    displayLanguage = 'ES + V.O.';
+  } else {
+    displayLanguage = 'V.O.';
+  }
 
   return {
     // TMDB ID for reference
@@ -76,8 +102,8 @@ export const transformTMDBMovie = (tmdbMovie) => {
     
     // Title
     title: {
-      original: tmdbMovie.original_title || '',
-      spanish: tmdbMovie.title || tmdbMovie.original_title || '',
+      original: originalTitle,
+      spanish: spanishTitle || originalTitle,
     },
 
     // Images - Use higher quality poster, fallback to backdrop if no poster
@@ -90,7 +116,9 @@ export const transformTMDBMovie = (tmdbMovie) => {
 
     // Basic info
     country,
+    countryCode: tmdbMovie.production_countries?.[0]?.iso_3166_1 || null, // ISO code for flag
     language: tmdbMovie.original_language || 'en',
+    displayLanguage, // ES, V.O., or ES + V.O. for display
     duration: tmdbMovie.runtime || 0,
     gender,
     calification,

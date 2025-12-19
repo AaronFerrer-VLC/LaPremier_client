@@ -9,22 +9,29 @@ import { BrowserRouter as Router } from 'react-router-dom'
 import { AuthProviderWrapper } from './contexts/auth.context.jsx'
 import { ThemeProvider } from './contexts/ThemeContext.jsx'
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary.jsx'
+import { HelmetProvider } from 'react-helmet-async'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { queryClient } from './config/queryClient'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>
-      <ThemeProvider>
-        <AuthProviderWrapper>
-          <Router
-            future={{
-              v7_startTransition: true,
-              v7_relativeSplatPath: true,
-            }}
-          >
-            <App />
-          </Router>
-        </AuthProviderWrapper>
-      </ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <HelmetProvider>
+          <ThemeProvider>
+            <AuthProviderWrapper>
+              <Router
+                future={{
+                  v7_startTransition: true,
+                  v7_relativeSplatPath: true,
+                }}
+              >
+                <App />
+              </Router>
+            </AuthProviderWrapper>
+          </ThemeProvider>
+        </HelmetProvider>
+      </QueryClientProvider>
     </ErrorBoundary>
   </StrictMode>,
 )

@@ -45,15 +45,19 @@ const Select = ({
                 {...props}
             >
                 {placeholder && (
-                    <option value="" disabled>
+                    <option value="" disabled hidden={!!props.value}>
                         {placeholder}
                     </option>
                 )}
-                {options.map((option, index) => (
-                    <option key={option.value || index} value={option.value}>
-                        {option.label || option}
-                    </option>
-                ))}
+                {options.map((option, index) => {
+                    const optionValue = option.value !== undefined ? String(option.value) : '';
+                    const optionLabel = option.label || option || '';
+                    return (
+                        <option key={optionValue || `option-${index}`} value={optionValue}>
+                            {optionLabel}
+                        </option>
+                    );
+                })}
             </Form.Select>
             {error && errorMessage && (
                 <Form.Control.Feedback type="invalid" className="design-system-select-error">

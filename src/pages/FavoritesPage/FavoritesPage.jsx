@@ -9,6 +9,7 @@ import { SkeletonCardList } from '../../components/SkeletonLoader/SkeletonLoader
 import { Alert, Button } from '../../components/UI';
 import { FaHeart, FaBookmark, FaTrash } from 'react-icons/fa';
 import { notifySuccess, notifyError } from '../../utils/notifications';
+import { safeGetItem, safeSetItem } from '../../utils/storage';
 import logger from '../../utils/logger';
 import { ENV } from '../../config/env';
 import './FavoritesPage.css';
@@ -25,10 +26,10 @@ const FavoritesPage = () => {
     if (loggedUser) {
       return loggedUser.username || loggedUser.id || 'guest';
     }
-    let sessionId = localStorage.getItem('lapremier_session_id');
+    let sessionId = safeGetItem('session_id');
     if (!sessionId) {
       sessionId = `guest_${Date.now()}`;
-      localStorage.setItem('lapremier_session_id', sessionId);
+      safeSetItem('session_id', sessionId);
     }
     return sessionId;
   };

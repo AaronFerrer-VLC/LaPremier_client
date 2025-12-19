@@ -11,6 +11,7 @@ import LazyImage from '../../components/LazyImage/LazyImage';
 import { notifyError } from '../../utils/notifications';
 import logger from '../../utils/logger';
 import { ENV } from '../../config/env';
+import { getCountryCode } from '../../utils/countryCodes';
 import './ComparePage.css';
 
 const MAX_COMPARISONS = 3;
@@ -58,8 +59,8 @@ const ComparePage = () => {
       // Si hay menos de 5 resultados y TMDB está disponible, buscar en TMDB
       if (results.length < 5 && ENV.HAS_TMDB && query.length >= 2) {
         try {
-          const tmdbResults = await moviesService.searchMovies(query, 1);
-          const tmdbMovies = (tmdbResults.data?.results || [])
+          const tmdbResults = await moviesService.searchTMDB(query, 1);
+          const tmdbMovies = (tmdbResults.results || [])
             .slice(0, 5 - results.length)
             .map(tmdbMovie => {
               // Transformar a formato de nuestra app
@@ -130,18 +131,6 @@ const ComparePage = () => {
     }
   };
 
-  const countryNameToCode = {
-    "Estados Unidos": "US",
-    "España": "ES",
-    "Reino Unido": "GB",
-    "Canada": "CA",
-    "México": "MX",
-    "Alemania": "DE",
-    "Japón": "JP",
-    "Australia": "AU",
-    "Nueva Zelanda": "NZ",
-    "Finlandia": "FI",
-  };
 
   return (
     <Container className="ComparePage py-5">
@@ -314,7 +303,7 @@ const ComparePage = () => {
                       <td key={index}>
                         {movie.country && (
                           <>
-                            <FlagIcon countryCode={countryNameToCode[movie.country] || null} size="small" />
+                            <FlagIcon countryCode={getCountryCode(movie.country)} size="small" />
                             <span className="ms-2">{movie.country}</span>
                           </>
                         )}

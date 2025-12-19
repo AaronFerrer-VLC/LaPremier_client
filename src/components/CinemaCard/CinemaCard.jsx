@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom"
 import PropTypes from "prop-types"
+import { memo } from "react"
 import { Row, Col } from 'react-bootstrap/'
 import { FaGlasses, FaClosedCaptioning, FaWheelchair } from 'react-icons/fa'
 import { Card } from '../UI'
@@ -114,4 +115,19 @@ CinemaCard.propTypes = {
     })
 }
 
-export default CinemaCard
+// Memoize component to prevent unnecessary re-renders
+export default memo(CinemaCard, (prevProps, nextProps) => {
+  // Custom comparison function for better performance
+  const prevId = prevProps.id || prevProps._id;
+  const nextId = nextProps.id || nextProps._id;
+  
+  // If IDs are different, re-render
+  if (prevId !== nextId) return false;
+  
+  // Compare other important props
+  if (prevProps.name !== nextProps.name) return false;
+  if (prevProps.cover?.[0] !== nextProps.cover?.[0]) return false;
+  
+  // If all important props are the same, skip re-render
+  return true;
+});

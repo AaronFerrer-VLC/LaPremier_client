@@ -6,35 +6,8 @@ import LazyImage from '../LazyImage/LazyImage';
 import FavoriteButton from '../FavoriteButton/FavoriteButton';
 import ShareButton from '../ShareButton/ShareButton';
 import { FaClock, FaFlag, FaLanguage, FaCalendarAlt } from 'react-icons/fa';
+import { getCountryCode } from '../../utils/countryCodes';
 import './MovieListItem.css';
-
-const countryNameToCode = {
-    "Estados Unidos": "US",
-    "United States of America": "US",
-    "España": "ES",
-    "Spain": "ES",
-    "Reino Unido": "GB",
-    "United Kingdom": "GB",
-    "Canada": "CA",
-    "México": "MX",
-    "Mexico": "MX",
-    "Alemania": "DE",
-    "Germany": "DE",
-    "Japón": "JP",
-    "Japan": "JP",
-    "Australia": "AU",
-    "Austria": "AT",
-    "New Zealand": "NZ",
-    "Nueva Zelanda": "NZ",
-    "Finland": "FI",
-    "Finlandia": "FI",
-    "Francia": "FR",
-    "France": "FR",
-    "Polonia": "PL",
-    "Poland": "PL",
-    "Italia": "IT",
-    "Italy": "IT",
-};
 
 const MovieListItem = ({ id, tmdbId, movie, title, country, duration, language, calification, poster, date }) => {
     const movieData = movie || {
@@ -60,7 +33,7 @@ const MovieListItem = ({ id, tmdbId, movie, title, country, duration, language, 
     };
 
     const year = getYear();
-    const countryCode = countryNameToCode[movieCountry] || null;
+    const countryCode = getCountryCode(movieCountry);
     const linkTo = movieId ? `/peliculas/detalles/${movieId}` : '#';
 
     return (

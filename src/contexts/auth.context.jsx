@@ -1,14 +1,13 @@
 import { createContext, useState, useEffect } from "react"
-import { STORAGE_KEYS } from "../config/constants"
 import authService from "../services/auth.service"
+import { safeGetItem, safeSetItem, safeRemoveItem } from "../utils/storage"
 
 const AuthContext = createContext()
 
 function AuthProviderWrapper(props) {
     // Initialize from localStorage if available
     const [loggedUser, setLoggedUser] = useState(() => {
-        const stored = localStorage.getItem(STORAGE_KEYS.AUTH_USER)
-        return stored ? JSON.parse(stored) : null
+        return safeGetItem('auth_user', null);
     })
 
     // Verify token on mount and periodically
@@ -32,10 +31,10 @@ function AuthProviderWrapper(props) {
     // Persist to localStorage when loggedUser changes
     useEffect(() => {
         if (loggedUser) {
-            localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(loggedUser))
+            safeSetItem('auth_user', loggedUser);
         } else {
-            localStorage.removeItem(STORAGE_KEYS.AUTH_USER)
-            localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN)
+            safeRemoveItem('auth_user');
+            safeRemoveItem('auth_token');
         }
     }, [loggedUser])
 

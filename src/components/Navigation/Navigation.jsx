@@ -14,38 +14,36 @@ const Navigation = ({ currentFamilyPath, setShowModal }) => {
 
     const { loggedUser, isAuthenticated, logout } = useContext(AuthContext)
 
-    if (currentFamilyPath) {
+    return (
+        <nav id="main-navigation" className="Navigation" role="navigation" aria-label="Navegación principal">
+            <Navbar sticky="top" collapseOnSelect expand="lg" bg="dark" variant="dark">
+                <Container>
+                    <Navbar.Brand 
+                        to="/" 
+                        as={Link} 
+                        className="logo text-primary"
+                        aria-label="Ir a la página de inicio - LA PREMIERE"
+                    >
+                        LA PREMIERE
+                    </Navbar.Brand>
 
-        return (
-            <nav className="Navigation" role="navigation" aria-label="Navegación principal">
-                <Navbar sticky="top" collapseOnSelect expand="lg">
-                    <Container>
-                        <Navbar.Brand 
-                            to="/" 
-                            as={Link} 
-                            className="logo text-primary"
-                            aria-label="Ir a la página de inicio - LA PREMIERE"
-                        >
-                            LA PREMIERE
-                        </Navbar.Brand>
-
-                        <Navbar.Toggle 
-                            aria-controls="responsive-navbar-nav" 
-                            aria-label="Alternar menú de navegación"
-                            aria-expanded="false"
-                        />
-                        <Navbar.Collapse id="responsive-navbar-nav">
-                            <Nav className="me-auto" role="navigation" aria-label="Búsqueda">
-                                {
-                                    currentFamilyPath === 'cines' ?
-                                        <CinemasGlobalFilter currentFamilyPath={currentFamilyPath} />
-                                        : currentFamilyPath === 'peliculas' ?
-                                            <MoviesGlobalFilter currentFamilyPath={currentFamilyPath} />
-                                            :
-                                            null
-                                }
-                            </Nav>
-                            <Nav className="ms-auto d-flex align-items-center gap-2" role="navigation" aria-label="Enlaces principales">
+                    <Navbar.Toggle 
+                        aria-controls="responsive-navbar-nav" 
+                        aria-label="Alternar menú de navegación"
+                        aria-expanded="false"
+                    />
+                    <Navbar.Collapse id="responsive-navbar-nav">
+                        <Nav className="me-auto" role="navigation" aria-label="Búsqueda">
+                            {
+                                currentFamilyPath === 'cines' ?
+                                    <CinemasGlobalFilter currentFamilyPath={currentFamilyPath} />
+                                    : currentFamilyPath === 'peliculas' ?
+                                        <MoviesGlobalFilter currentFamilyPath={currentFamilyPath} />
+                                        :
+                                        null
+                            }
+                        </Nav>
+                        <Nav className="ms-auto d-flex align-items-center gap-2" role="navigation" aria-label="Enlaces principales">
 
                                 <Nav.Link 
                                     to="/cines" 
@@ -180,13 +178,12 @@ const Navigation = ({ currentFamilyPath, setShowModal }) => {
                                 }
 
 
-                            </Nav>
-                        </Navbar.Collapse>
-                    </Container>
-                </Navbar>
-            </nav>
-        )
-    }
+                        </Nav>
+                    </Navbar.Collapse>
+                </Container>
+            </Navbar>
+        </nav>
+    )
 }
 
 export default Navigation

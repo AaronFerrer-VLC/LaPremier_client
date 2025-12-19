@@ -1,79 +1,74 @@
 import { Form, Row, Col } from 'react-bootstrap';
 import { Button } from '../UI';
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import logger from '../../utils/logger';
 import { moviesService } from '../../services/movies.service';
+import { useCinema, useUpdateCinema } from '../../hooks/useCinemas';
+import { useMovies } from '../../hooks/useMovies';
+import { notifySuccess, notifyError } from '../../utils/notifications';
 import { ENV } from '../../config/env';
-
-const API_URL = import.meta.env.VITE_APP_API_URL
+import { sanitizeString, sanitizeUrl, sanitizeNumber, sanitizeArray } from '../../utils/sanitize';
 
 const EditCinemaForm = () => {
 
     const { cinemaId } = useParams()
     const navigate = useNavigate()
 
-    const [isLoading, setIsLoading] = useState(true)
-
-    const [movies, setMovies] = useState([])
+    // Fetch cinema using React Query
+    const { data: cinema, isLoading: isLoadingCinema } = useCinema(cinemaId, {
+        enabled: !!cinemaId && cinemaId !== 'undefined',
+    })
+    
+    // Fetch movies using React Query
+    const { data: localMovies = [], isLoading: isLoadingLocalMovies } = useMovies()
+    
+    // Fetch TMDB movies
+    const [tmdbMovies, setTmdbMovies] = useState([])
+    const [isLoadingTMDB, setIsLoadingTMDB] = useState(false)
+    
     useEffect(() => {
-        fetchCinemaData()
-        fetchMovies()
-    }, [])
-
-    const fetchMovies = async () => {
-        try {
-            const allMovies = []
-            let localMoviesCount = 0
-            let tmdbMoviesCount = 0
-            
-            // Fetch local movies from MongoDB
+        const fetchTMDBMovies = async () => {
+            if (!ENV.HAS_TMDB) return
             try {
-                const localResponse = await axios.get(`${API_URL}/movies/`)
-                const localMovies = Array.isArray(localResponse.data) ? localResponse.data : []
-                allMovies.push(...localMovies)
-                localMoviesCount = localMovies.length
-                logger.info('Local movies loaded', { count: localMoviesCount }, 'EditCinemaForm')
-            } catch (localErr) {
-                logger.warn('Failed to fetch local movies', localErr, 'EditCinemaForm')
+                setIsLoadingTMDB(true)
+                const tmdb = await moviesService.getNowPlayingFromTMDB(1)
+                setTmdbMovies(tmdb || [])
+            } catch (err) {
+                logger.warn('Failed to fetch TMDB movies', err, 'EditCinemaForm')
+            } finally {
+                setIsLoadingTMDB(false)
             }
-            
-            // Fetch now playing movies from TMDB if enabled
-            if (ENV.HAS_TMDB) {
-                try {
-                    const tmdbMovies = await moviesService.getNowPlayingFromTMDB(1)
-                    // Transform TMDB movies to match local format
-                    const transformedTMDBMovies = tmdbMovies.map(movie => ({
-                        ...movie,
-                        id: movie.tmdbId, // Use tmdbId as id for selection
-                        _id: movie.tmdbId,
-                    }))
-                    allMovies.push(...transformedTMDBMovies)
-                    tmdbMoviesCount = transformedTMDBMovies.length
-                    logger.info('TMDB movies loaded', { count: tmdbMoviesCount }, 'EditCinemaForm')
-                } catch (tmdbErr) {
-                    logger.warn('Failed to fetch TMDB movies', tmdbErr, 'EditCinemaForm')
-                }
-            }
-            
-            // Remove duplicates based on id/tmdbId
-            const uniqueMovies = allMovies.reduce((acc, movie) => {
-                const movieId = movie.id || movie._id || movie.tmdbId
-                if (!acc.find(m => (m.id || m._id || m.tmdbId) === movieId)) {
-                    acc.push(movie)
-                }
-                return acc
-            }, [])
-            
-            setMovies(uniqueMovies)
-            setIsLoading(false)
-            logger.info('All movies loaded', { total: uniqueMovies.length, local: localMoviesCount, tmdb: tmdbMoviesCount }, 'EditCinemaForm')
-        } catch (err) {
-            logger.error('Failed to fetch movies', err, 'EditCinemaForm')
-            setIsLoading(false)
         }
-    }
+        fetchTMDBMovies()
+    }, [])
+    
+    // Combine and deduplicate movies
+    const movies = useMemo(() => {
+        const allMovies = [...(localMovies || [])]
+        const transformedTMDB = (tmdbMovies || []).map(movie => ({
+            ...movie,
+            id: movie.tmdbId,
+            _id: movie.tmdbId,
+        }))
+        allMovies.push(...transformedTMDB)
+        
+        // Remove duplicates
+        const uniqueMovies = allMovies.reduce((acc, movie) => {
+            const movieId = movie.id || movie._id || movie.tmdbId
+            if (!acc.find(m => (m.id || m._id || m.tmdbId) === movieId)) {
+                acc.push(movie)
+            }
+            return acc
+        }, [])
+        
+        return uniqueMovies
+    }, [localMovies, tmdbMovies])
+    
+    const isLoading = isLoadingCinema || isLoadingLocalMovies || isLoadingTMDB
+    
+    // Update cinema mutation
+    const updateCinemaMutation = useUpdateCinema()
 
     const [cinemaData, setCinemaData] = useState({
         name: '',
@@ -107,36 +102,56 @@ const EditCinemaForm = () => {
         seating: 0
     })
 
-    const fetchCinemaData = () => {
-        axios
-            .get(`${API_URL}/cinemas/${cinemaId}`)
-            .then(response => {
-                const { data: cinemaData } = response
-
-                setCinemaData(cinemaData)
-                setAddress(cinemaData.address)
-                setPrice(cinemaData.price)
-                setSpecs(cinemaData.specs)
-                setCapacity(cinemaData.capacity)
+    // Initialize form data when cinema loads
+    useEffect(() => {
+        if (cinema) {
+            setCinemaData({
+                name: cinema.name || '',
+                cover: Array.isArray(cinema.cover) && cinema.cover.length > 0 ? cinema.cover : [''],
+                url: cinema.url || '',
+                services: Array.isArray(cinema.services) && cinema.services.length > 0 ? cinema.services : [''],
+                movieId: Array.isArray(cinema.movieId) ? cinema.movieId : []
             })
-    }
+            setAddress(cinema.address || {
+                street: '',
+                city: '',
+                zipcode: 0,
+                country: ''
+            })
+            setPrice(cinema.price || {
+                regular: 0,
+                weekend: 0,
+                special: 0
+            })
+            setSpecs(cinema.specs || {
+                VO: false,
+                is3D: false,
+                accesibility: false
+            })
+            setCapacity(cinema.capacity || {
+                dicerooms: 0,
+                seating: 0
+            })
+        }
+    }, [cinema])
 
     const handleCinemaDataChange = e => {
         const { name, value } = e.target
+        const sanitizedValue = name === 'url' 
+            ? (sanitizeUrl(value) || value)
+            : sanitizeString(value, { maxLength: 500 })
 
         setCinemaData({
-            ...cinemaData, [name]: value
-        }
-        )
+            ...cinemaData, [name]: sanitizedValue
+        })
     }
 
     const handleCoversChange = (e, idx) => {
-
         const { value } = e.target
+        const sanitizedValue = sanitizeUrl(value) || sanitizeString(value, { maxLength: 500 })
 
         const coversCopy = [...cinemaData.cover]
-
-        coversCopy[idx] = value
+        coversCopy[idx] = sanitizedValue
 
         setCinemaData({
             ...cinemaData, cover: coversCopy
@@ -157,12 +172,11 @@ const EditCinemaForm = () => {
     }
 
     const handleServicesChange = (e, idx) => {
-
         const { value } = e.target
+        const sanitizedValue = sanitizeString(value, { maxLength: 100 })
 
         const servicesCopy = [...cinemaData.services]
-
-        servicesCopy[idx] = value
+        servicesCopy[idx] = sanitizedValue
 
         setCinemaData({
             ...cinemaData, services: servicesCopy
@@ -183,25 +197,14 @@ const EditCinemaForm = () => {
 
     const handleMovieIdChange = (e, idx) => {
         const { value } = e.target
-
+        const sanitizedId = sanitizeNumber(value, { integer: true, min: 1 })
+        
         const moviesIdsCopy = [...cinemaData.movieId]
-
-        // Convert to number if value is not empty and is numeric, otherwise keep as string
-        // MongoDB schema expects [Number], but we need to handle both TMDB IDs (numbers) and MongoDB ObjectIds
-        if (value) {
-            // Try to convert to number if it's numeric
-            const numValue = Number(value);
-            if (!isNaN(numValue) && isFinite(numValue)) {
-                moviesIdsCopy[idx] = numValue; // Store as number for TMDB IDs
-            } else {
-                // For MongoDB ObjectIds (strings), we'll need to store them differently
-                // But since schema expects Number, we should use a numeric ID if available
-                // For now, try to extract numeric part or use 0 as fallback
-                logger.warn('Non-numeric movie ID selected', { value, idx }, 'EditCinemaForm');
-                moviesIdsCopy[idx] = 0; // Fallback - this won't work, but schema requires Number
-            }
+        
+        if (sanitizedId !== null) {
+            moviesIdsCopy[idx] = sanitizedId
         } else {
-            moviesIdsCopy[idx] = '';
+            moviesIdsCopy[idx] = ''
         }
 
         setCinemaData({
@@ -227,17 +230,25 @@ const EditCinemaForm = () => {
 
     const handleAddresChange = e => {
         const { name, value } = e.target
+        let sanitizedValue
+        
+        if (name === 'zipcode') {
+            sanitizedValue = sanitizeNumber(value, { min: 0, max: 99999, integer: true }) || 0
+        } else {
+            sanitizedValue = sanitizeString(value, { maxLength: name === 'street' ? 200 : 100 })
+        }
 
         setAddress({
-            ...address, [name]: value
+            ...address, [name]: sanitizedValue
         })
     }
 
     const handlePriceChange = e => {
         const { name, value } = e.target
+        const sanitizedValue = sanitizeNumber(value, { min: 0, max: 1000 }) || 0
 
         setPrice({
-            ...price, [name]: value
+            ...price, [name]: sanitizedValue
         })
     }
 
@@ -245,60 +256,73 @@ const EditCinemaForm = () => {
         const { name, checked } = e.target
 
         setSpecs({
-            ...specs, [name]: checked
+            ...specs, [name]: Boolean(checked)
         })
     }
 
     const handleCapacityChange = e => {
         const { name, value } = e.target
+        const sanitizedValue = sanitizeNumber(value, { 
+            min: 0, 
+            max: name === 'seating' ? 100000 : 100, 
+            integer: true 
+        }) || 0
 
         setCapacity({
-            ...capacity, [name]: value
+            ...capacity, [name]: sanitizedValue
         })
     }
 
-    const handleFormSubmit = e => {
-
+    const handleFormSubmit = async (e) => {
         e.preventDefault()
 
-        // Filter out empty movie IDs and ensure they're all numbers before submitting
-        const filteredMovieIds = cinemaData.movieId
-            .filter(id => id !== '' && id !== null && id !== undefined && id !== 0)
-            .map(id => {
-                // Ensure all IDs are numbers (MongoDB schema expects [Number])
-                const numId = Number(id);
-                if (isNaN(numId) || !isFinite(numId)) {
-                    logger.warn('Invalid movie ID filtered out', { id }, 'EditCinemaForm');
-                    return null;
-                }
-                return numId;
-            })
-            .filter(id => id !== null);
+        // Sanitize and validate form data
+        const sanitizedMovieIds = sanitizeArray(cinemaData.movieId, (id) => {
+            const numId = sanitizeNumber(id, { integer: true, min: 1 })
+            return numId
+        }).filter(id => id !== null && id !== undefined)
 
-        logger.info('Submitting cinema with movie IDs', { 
-            cinemaId, 
-            movieIds: filteredMovieIds,
-            movieIdsTypes: filteredMovieIds.map(id => typeof id)
-        }, 'EditCinemaForm');
-
-        const reqPayload = {
-            ...cinemaData,
-            movieId: filteredMovieIds.length > 0 ? filteredMovieIds : [],
-            address: address,
-            price: price,
-            specs: specs,
-            capacity: capacity
+        // Sanitize cinema data
+        const sanitizedData = {
+            name: sanitizeString(cinemaData.name, { maxLength: 200 }),
+            cover: sanitizeArray(cinemaData.cover, (url) => sanitizeUrl(url) || sanitizeString(url, { maxLength: 500 })),
+            url: sanitizeUrl(cinemaData.url) || cinemaData.url,
+            services: sanitizeArray(cinemaData.services, (service) => sanitizeString(service, { maxLength: 100 })),
+            movieId: sanitizedMovieIds.length > 0 ? sanitizedMovieIds : [],
+            address: {
+                street: sanitizeString(address.street, { maxLength: 200 }),
+                city: sanitizeString(address.city, { maxLength: 100 }),
+                zipcode: sanitizeNumber(address.zipcode, { min: 0, max: 99999, integer: true }) || 0,
+                country: sanitizeString(address.country, { maxLength: 100 })
+            },
+            price: {
+                regular: sanitizeNumber(price.regular, { min: 0, max: 1000 }) || 0,
+                weekend: sanitizeNumber(price.weekend, { min: 0, max: 1000 }) || 0,
+                special: sanitizeNumber(price.special, { min: 0, max: 1000 }) || 0
+            },
+            specs: {
+                VO: Boolean(specs.VO),
+                is3D: Boolean(specs.is3D),
+                accesibility: Boolean(specs.accesibility)
+            },
+            capacity: {
+                dicerooms: sanitizeNumber(capacity.dicerooms, { min: 0, max: 100, integer: true }) || 0,
+                seating: sanitizeNumber(capacity.seating, { min: 0, max: 100000, integer: true }) || 0
+            }
         }
 
-        axios
-            .put(`${API_URL}/cinemas/${cinemaId}`, reqPayload)
-            .then(() => {
-                logger.info('Cinema updated successfully', { cinemaId }, 'EditCinemaForm')
-                navigate(`/cines/detalles/${cinemaId}`)
+        try {
+            await updateCinemaMutation.mutateAsync({
+                id: cinemaId,
+                data: sanitizedData
             })
-            .catch(err => {
-                logger.error('Failed to update cinema', err, 'EditCinemaForm')
-            })
+            
+            notifySuccess('Cine actualizado correctamente')
+            navigate(`/cines/detalles/${cinemaId}`)
+        } catch (err) {
+            logger.error('Failed to update cinema', err, 'EditCinemaForm')
+            notifyError('Error al actualizar el cine')
+        }
     }
 
     return (

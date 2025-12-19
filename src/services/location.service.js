@@ -4,6 +4,7 @@
  */
 
 import logger from '../utils/logger';
+import { safeGetItem, safeSetItem } from '../utils/storage';
 
 export const locationService = {
   /**
@@ -77,7 +78,7 @@ export const locationService = {
   getUserCity: async () => {
     try {
       // Check localStorage first
-      const savedCity = localStorage.getItem('userCity');
+      const savedCity = safeGetItem('userCity');
       if (savedCity) {
         logger.info('Using saved city from localStorage', { city: savedCity }, 'LocationService');
         return savedCity;
@@ -87,8 +88,8 @@ export const locationService = {
       const position = await locationService.getCurrentPosition();
       const city = await locationService.getCityFromCoordinates(position.lat, position.lng);
       
-      // Save to localStorage
-      localStorage.setItem('userCity', city);
+      // Save to localStorage securely
+      safeSetItem('userCity', city);
       
       return city;
     } catch (error) {
@@ -103,8 +104,10 @@ export const locationService = {
    * @param {string} city - City name
    */
   setUserCity: (city) => {
-    localStorage.setItem('userCity', city);
-    logger.info('User city set manually', { city }, 'LocationService');
+    if (typeof city === 'string' && city.trim()) {
+      safeSetItem('userCity', city.trim());
+      logger.info('User city set manually', { city }, 'LocationService');
+    }
   },
 
   /**
@@ -112,7 +115,7 @@ export const locationService = {
    * @returns {string|null} City name or null
    */
   getSavedCity: () => {
-    return localStorage.getItem('userCity');
+    return safeGetItem('userCity');
   },
 };
 

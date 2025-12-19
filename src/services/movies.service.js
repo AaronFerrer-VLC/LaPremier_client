@@ -160,6 +160,78 @@ export const moviesService = {
   },
 
   /**
+   * Get all now playing movies from TMDB (all pages)
+   * @returns {Promise} Array of all now playing movies
+   */
+  getAllNowPlayingFromTMDB: async () => {
+    try {
+      // First, get page 1 to know total pages
+      const firstPageData = await tmdbService.getNowPlaying(1);
+      const totalPages = firstPageData.total_pages || 1;
+      const allMovies = [];
+
+      // Transform movies from first page
+      for (const tmdbMovie of firstPageData.results || []) {
+        try {
+          const transformed = transformTMDBMovie(tmdbMovie);
+          allMovies.push(transformed);
+        } catch (error) {
+          logger.warn('Failed to transform movie', { tmdbId: tmdbMovie.id, error }, 'MoviesService');
+        }
+      }
+
+      // If there are more pages, fetch them
+      // Limit to first 10 pages to avoid too many requests (200 movies should be enough)
+      const maxPages = Math.min(totalPages, 10);
+      
+      if (maxPages > 1) {
+        const pagePromises = [];
+        for (let page = 2; page <= maxPages; page++) {
+          // Add a small delay between requests to avoid rate limits
+          const delay = (page - 2) * 100; // 100ms delay between each page
+          pagePromises.push(
+            new Promise((resolve) => {
+              setTimeout(() => {
+                tmdbService.getNowPlaying(page)
+                  .then(resolve)
+                  .catch((error) => {
+                    logger.warn(`Failed to fetch page ${page}`, error, 'MoviesService');
+                    resolve({ results: [] }); // Return empty results on error
+                  });
+              }, delay);
+            })
+          );
+        }
+
+        // Fetch all pages (with delays)
+        const remainingPages = await Promise.all(pagePromises);
+        
+        // Transform movies from remaining pages
+        for (const pageData of remainingPages) {
+          for (const tmdbMovie of pageData.results || []) {
+            try {
+              const transformed = transformTMDBMovie(tmdbMovie);
+              allMovies.push(transformed);
+            } catch (error) {
+              logger.warn('Failed to transform movie', { tmdbId: tmdbMovie.id, error }, 'MoviesService');
+            }
+          }
+        }
+      }
+
+      logger.info('All now playing movies loaded', { 
+        totalPages, 
+        totalMovies: allMovies.length 
+      }, 'MoviesService');
+
+      return allMovies;
+    } catch (error) {
+      logger.error('Failed to get all now playing from TMDB', error, 'MoviesService');
+      throw error;
+    }
+  },
+
+  /**
    * Get similar movies from TMDB
    * @param {number} tmdbId - TMDB movie ID
    * @param {number} page - Page number (default: 1)
