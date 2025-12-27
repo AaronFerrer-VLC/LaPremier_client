@@ -7,8 +7,8 @@
 Añadir en Vercel → Project Settings → Environment Variables:
 
 ```env
-# Backend API URL (URL de tu backend en Railway)
-VITE_APP_API_URL=https://tu-proyecto.up.railway.app
+# Backend API URL (URL de tu backend en Render)
+VITE_APP_API_URL=https://tu-proyecto.onrender.com
 
 # Google Maps (opcional pero recomendado)
 VITE_GOOGLE_MAPS_API_KEY=tu-api-key-de-google-maps

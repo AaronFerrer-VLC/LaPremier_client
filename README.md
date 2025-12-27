@@ -486,7 +486,7 @@ Los archivos optimizados estarán en `dist/`.
 Configurar en la plataforma de hosting:
 
 ```env
-VITE_APP_API_URL=https://tu-backend.railway.app
+VITE_APP_API_URL=https://tu-proyecto.onrender.com
 VITE_GOOGLE_MAPS_API_KEY=tu-api-key
 ```
 
@@ -500,9 +500,10 @@ VITE_GOOGLE_MAPS_API_KEY=tu-api-key
 
 ### 🚀 Stack Recomendado Completo
 
-- **Backend:** Railway (gratis) - Ver [DEPLOY.md](../LaPremier_Server/DEPLOY.md)
-- **Frontend:** Vercel (gratis)
+- **Backend:** Render (gratis - 750 horas/mes) - Ver [DEPLOY.md](../LaPremier_Server/DEPLOY.md)
+- **Frontend:** Vercel (gratis - 100GB/mes)
 - **Base de Datos:** MongoDB Atlas (gratis - 512MB)
+- **Cron Jobs:** Render (incluido) o cron-job.org (gratis)
 - **Total:** $0/mes
 
 ### 📖 Guía Completa
